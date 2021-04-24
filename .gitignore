@@ -1,0 +1,13 @@
+.idea/
+node_modules/
+
+yarn.lock
+package-lock.json
+
+*.log
+*.js
+*.iml
+
+coverage/
+.nyc_output/
+dist/
