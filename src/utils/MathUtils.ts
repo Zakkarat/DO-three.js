@@ -1,14 +1,14 @@
 import Constants from "../constants/Constants";
 import * as THREE from "three";
 import {Vector3} from "three";
-import Sphere from "../entities/Sphere";
+import Entity from "../entities/Entity";
 
 export default class MathUtils {
     static moveTowardDirection(direction:number, distance:number, expressionX:number):number {
         return direction * distance * this.sinExpression(expressionX) * Constants.ROLLBACK_MULTIPLIER;
     }
 
-    static moveSphereTowardDirection(sphere: Sphere , direction:Vector3, distance:number, expressionX:number) {
+    static moveEntityTowardDirection(sphere: Entity , direction:Vector3, distance:number, expressionX:number) {
         sphere.position.x -= MathUtils.moveTowardDirection(direction.x, distance, expressionX);
         sphere.position.y -= MathUtils.moveTowardDirection(direction.y, distance, expressionX);
         sphere.position.z -= MathUtils.moveTowardDirection(direction.z, distance, expressionX);
@@ -30,13 +30,26 @@ export default class MathUtils {
         return (Math.sin(x * Math.PI - Math.PI / 2) + 1) / 2;
     }
 
-    static rotate(difference:number):number {
-        return Constants.ROTATION_INCREMENT + difference * Constants.ROTATION_MULTIPLIER;
+    static calculateDistance(target:THREE.Vector3, source:THREE.Vector3) {
+        return Math.sqrt(
+            Math.pow(target.x - source.x, 2)
+            + Math.pow(target.y - source.y, 2)
+            + Math.pow(target.z - source.z, 2)
+        );
     }
 
+    static getRandomColor():number {
+        return Math.floor(Math.random()*16777215);
+    }
 
-    static calculateDistance(target:THREE.Vector3, source:THREE.Vector3) {
-        return Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2) + Math.pow(target.z - source.z, 2));
+    static getRandomNumber(min:number, max:number):number {
+        return Math.floor(Math.random() * (max - min) ) + min;
+    }
+
+    static isIntersect(boundaries:number[], neighborBoundaries:number[]) {
+
+        return boundaries[0] > neighborBoundaries[0] && boundaries[0] < neighborBoundaries[1] ||
+            boundaries[1] > neighborBoundaries[0] && boundaries[1] < neighborBoundaries[1];
     }
 
     static normalizePivot(expected:number, current:number):number {
