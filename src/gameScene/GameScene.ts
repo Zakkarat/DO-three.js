@@ -73,6 +73,10 @@ export default class GameScene extends THREE.Scene {
         this._container.appendChild(this._renderer.domElement);
     }
 
+    public render() {
+        this._renderer.render(this, this._camera);
+    }
+
     private animate(task:Task) {
         requestAnimationFrame(this.animate.bind(this, task));
         this._renderer.render(this, this._camera);

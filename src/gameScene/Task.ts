@@ -25,6 +25,7 @@ export default class Task {
             const line = LineFactory.build();
             this._objects.push(line);
         }
+        this.doGreedy();
         this.centerMassLine = this.createCenterMassLine();
         this.scene.add(...this._objects, this.centerLine, this.centerMassLine);
     }
@@ -66,14 +67,81 @@ export default class Task {
     }
 
     private getCenterMass() {
-        const overallWeight = this.objects.reduce((acc, curr) => {
+        const overallWeight = this._objects.reduce((acc, curr) => {
             acc += curr.weight;
             return acc;
         }, 0);
-        return this.objects.reduce((acc, curr) => {
+        return this._objects.reduce((acc, curr) => {
             acc += curr.position.x * curr.weight;
             return acc;
         }, 0) / overallWeight;
+    }
+
+    private formLine() {
+        const lineWidth = this._objects.reduce((acc, curr) => {
+            acc += curr.getWidth();
+            return acc;
+        }, 0)
+        const start = this.centerLine.position.x - lineWidth / 2;
+        this._objects.reduce((acc,curr) => {
+            curr.position.x = acc + curr.getWidth() / 2;
+            acc += curr.getWidth();
+            return acc;
+        }, start);
+    }
+
+    private doGreedy() {
+        this._objects = this._objects.sort((a, b) => a.weight - b.weight);
+        this.refreshScene();
+        let difference = this.getDifference();
+        // let bestStructure:Entity[] = [];
+        // console.log(difference);
+        // const resetObjects = [...this._objects];
+        // for (let i = 0; i < this._objects.length; i++) {
+        //     for (let j = 0; j < this._objects.length; j++) {
+        //         this.swap(this._objects, i, j);
+        //         console.log(this.objects);
+        //         this.refreshScene();
+        //         console.log(this.getDifference());
+        //         if (difference > this.getDifference()) {
+        //             bestStructure = [...this._objects];
+        //             difference = this.getDifference();
+        //         } else {
+        //             this._objects = [...resetObjects];
+        //         }
+        //     }
+        // }
+        // this._objects = [...bestStructure];
+        // this.refreshScene();
+        // console.log(difference);
+        const newObjects = [...this._objects];
+        const arr1 = newObjects.slice(0, newObjects.length / 2);
+        const arr2 = newObjects.slice(newObjects.length / 2, newObjects.length);
+        arr2.sort((a, b) => {
+            return b.weight - a.weight;
+        });
+        this._objects = arr1.concat(arr2);
+        for (let i = 0; i < this._objects.length; i++) {
+            this.swap(this._objects, i, this._objects.length - 1  - i);
+            this.refreshScene();
+            this.formLine();
+        }
+        this.formLine();
+    }
+
+    private refreshScene() {
+        this.formLine();
+        this.moveCenterMassLine();
+        this.scene.render();
+    }
+
+
+    private swap(arr:Entity[], i:number, j:number) {
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    private getDifference = () => {
+        return Math.abs(this.centerLine.position.x - this.centerMassLine.position.x);
     }
 
     public moveCenterMassLine() {

@@ -38,7 +38,7 @@ export default abstract class Entity extends THREE.Mesh {
         MathUtils.moveEntityTowardDirection(this, this._direction, this._distance, timePassed)
     }
 
-    protected abstract getWidth():number;
+    public abstract getWidth():number;
 
     protected abstract addWeightLabel():void;
 
