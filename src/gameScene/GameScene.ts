@@ -20,13 +20,13 @@ export default class GameScene extends THREE.Scene {
         super();
         this._container = document.createElement("div");
         document.body.appendChild(this._container);
-        new DebugController();
         this._renderer = new THREE.WebGLRenderer({antialias: true, alpha: false});
         this._camera = new THREE.OrthographicCamera(Constants.WIDTH / -2, Constants.WIDTH / 2, Constants.HEIGHT / 2, Constants.HEIGHT / -2, 1, 1000);
         this.fog = new THREE.Fog(0x23272a, 0.5, 1700);
 
         const task = new Task(1, this);
 
+        new DebugController(task);
         this.setCameraProperties();
         this.setRendererProperties();
         this.addLights();

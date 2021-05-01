@@ -5,7 +5,7 @@ import {Text} from 'troika-three-text';
 import Entity from "./Entity";
 
 export default class Line extends Entity {
-    static build(color:number, width:number, x:number, isVertical?:boolean):Line {
+    static build(color:number, width:number, x:number, isVertical?:boolean, weight?:number):Line {
         let height = 10;
         if (isVertical) {
             height = 100
@@ -15,6 +15,9 @@ export default class Line extends Entity {
         let result = new Line(geometry, meshLambertMaterial);
         result.receiveShadow = true;
         result.position.set(x, -50, -50);
+        if(weight) {
+            result._weight = weight;
+        }
         if (!isVertical) {
             result.addWeightLabel();
         }

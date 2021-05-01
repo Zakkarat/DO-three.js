@@ -10,7 +10,7 @@ export default abstract class Entity extends THREE.Mesh {
     protected _initialTime:number = 0;
     protected _finalTime:number = 0;
     protected _now:number = 0;
-    private _weight:number = MathUtils.getRandomNumber(1, 50);
+    protected _weight:number = MathUtils.getRandomNumber(1, 50);
     // private _angle:number = 0;
 
     public locked = false;
@@ -46,5 +46,9 @@ export default abstract class Entity extends THREE.Mesh {
 
     get weight():number {
         return this._weight;
+    }
+
+    set weight(value:number) {
+        this._weight = value;
     }
 }
