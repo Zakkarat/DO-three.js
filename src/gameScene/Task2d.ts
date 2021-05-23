@@ -11,7 +11,7 @@ import Constants from "../constants/Constants";
 
 type Coordinates =  "x"|"y"|"z";
 
-export default class Task {
+export default class Task2d {
     private dimensions: number;
     private scene: GameScene;
     private _objects: Entity[] = [];

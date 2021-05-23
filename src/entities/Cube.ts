@@ -1,15 +1,41 @@
 import * as THREE from "three";
 import {MeshLambertMaterial} from "three";
 import Entity from "./Entity";
+import {Text} from "troika-three-text";
 
 export default class Cube extends Entity {
-    static build(color:number, x:number, y:number):Cube {
-        const geometry = new THREE.BoxGeometry( 100, 100, 1 );
+    static build(color:number, x:number, y:number, weight?:number):Cube {
+        const geometry = new THREE.BoxGeometry( 100, 100, 10 );
         let meshLambertMaterial = new MeshLambertMaterial({color});
         let result = new Cube(geometry, meshLambertMaterial);
+        if (weight) {
+            result._weight = weight;
+        }
+        result.addWeightLabel();
         result.receiveShadow = true;
         result.position.set(x, y, -50);
-        // result._angle = angle;
         return result;
+    }
+
+    protected addWeightLabel():void {
+        const weightLabel = new Text();
+        weightLabel.text = this._weight + 'kg';
+        weightLabel.fontSize = 30.2
+        weightLabel.position.x = -33;
+        weightLabel.position.y = +15;
+        weightLabel.position.z = 25;
+        weightLabel.color = 0xFFFFFF
+        this.add(weightLabel)
+    }
+
+    getBoundaries():number[] {
+        return [];
+    }
+
+    getWidth():number {
+        return 0;
+    }
+
+    protected onDrag():void {
     }
 }

@@ -1,6 +1,6 @@
 import Constants from "../constants/Constants";
 import * as THREE from "three";
-import {Vector3} from "three";
+import {Vector2, Vector3} from "three";
 import Entity from "../entities/Entity";
 
 export default class MathUtils {
@@ -54,5 +54,9 @@ export default class MathUtils {
 
     static normalizePivot(expected:number, current:number):number {
         return (expected - current) / Constants.PIVOT_INHIBITOR;
+    }
+
+    static getPointDifference2D(start:{x:number, y:number}, target:{x:number, y:number}) {
+        return  Math.sqrt(Math.pow(target.x - start.x, 2) + Math.pow(target.y - start.y, 2));
     }
 }

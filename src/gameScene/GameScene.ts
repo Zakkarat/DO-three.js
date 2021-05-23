@@ -7,6 +7,8 @@ import DebugController from "./DebugController";
 import Task from "./Task";
 import {DragControls} from "three/examples/jsm/controls/DragControls";
 import {Object3D} from "three";
+import {Events} from "../constants/Events";
+import {EventEmitter} from "../utils/EventEmitter";
 // import {DragControls} from "three/examples/jsm/controls/DragControls";
 
 
@@ -31,9 +33,13 @@ export default class GameScene extends THREE.Scene {
         this.setRendererProperties();
         this.addLights();
         this.addDragControls(task.objects);
-
+        this.addHandlers();
 
         this.animate(task);
+    }
+
+    private addHandlers() {
+        EventEmitter.addListener(Events.CHANGE_TO_2D, this.onChangeTo2D);
     }
 
     private addDragControls(objects:Object3D[]) {
@@ -51,8 +57,8 @@ export default class GameScene extends THREE.Scene {
     }
 
     private addLights() {
-        new SpotLight(this, this._camera, 2.5, 300);
-        new SpotLight(this, this._camera, 2.3, -300);
+        // new SpotLight(this, this._camera, 2.5, 300);
+        // new SpotLight(this, this._camera, 2.3, -300);
         new HemiLight(this);
     }
 
@@ -61,6 +67,7 @@ export default class GameScene extends THREE.Scene {
         // this._camera.position.x = 300;
         // this._camera.position.y = 400;
         // this._camera.position.z = 700;
+        console.log(this.position);
         this._camera.lookAt(this.position);
     }
 
@@ -73,17 +80,21 @@ export default class GameScene extends THREE.Scene {
         this._container.appendChild(this._renderer.domElement);
     }
 
+    private onChangeTo2D() {
+        console.log('TO 2D!!!')
+    }
+
     public render() {
         this._renderer.render(this, this._camera);
     }
 
     private animate(task:Task) {
         requestAnimationFrame(this.animate.bind(this, task));
-        this._renderer.render(this, this._camera);
+        this.render();
         if (this.recheckIntersection) {
             this.recheckIntersection = task.clearIntersection();
         }
-        task.moveCenterMassLine();
+        task.moveCenterMass();
     }
 }
 

@@ -59,7 +59,7 @@ module.exports = {
     output: {
         publicPath: './',
         filename: filename("js"),
-        path: path.resolve(__dirname, "dist")
+        path: path.resolve(__dirname, "public")
     },
     resolve: {
         extensions: [".ts", ".js", ".png", ".json"],
@@ -69,7 +69,7 @@ module.exports = {
     },
     plugins: plugins(),
     devServer: {
-        contentBase: path.join(__dirname, 'dist'),
+        contentBase: path.join(__dirname, 'public'),
         writeToDisk: true,
         port: 4200,
         hot: isDev

@@ -25,4 +25,9 @@ export default class Constants {
     static readonly ANGLE = 120;
 
     static readonly BACKGROUND_COLOR = new THREE.Color( 0x21252d );
+
+    static LEFT =  window.innerWidth / 2 - 50 - 400;
+    static RIGHT =  -window.innerWidth / 2 + 50 + 400
+    static TOP = window.innerHeight / 2 - 50 - 100;
+    static BOTTOM = -window.innerHeight / 2 + 50 + 100;
 }

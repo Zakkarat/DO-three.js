@@ -1,5 +1,6 @@
-import {MeshLambertMaterial, SphereBufferGeometry} from "three";
+import {BoxGeometry, MeshLambertMaterial, SphereBufferGeometry} from "three";
 import Entity from "./Entity";
+import {Text} from "troika-three-text";
 
 export default class Sphere extends Entity {
     static build(radius:number, widthSegments:number, heightSegments:number,
@@ -10,5 +11,20 @@ export default class Sphere extends Entity {
         result.receiveShadow = true;
         result.position.set(x, y, z);
         return result;
+    }
+
+    protected addWeightLabel():void {
+
+    }
+
+    getBoundaries():number[] {
+        return [];
+    }
+
+    public getWidth() {
+        return (this.geometry as BoxGeometry).parameters.width;
+    }
+
+    protected onDrag():void {
     }
 }
