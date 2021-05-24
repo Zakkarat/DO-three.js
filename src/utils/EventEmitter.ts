@@ -6,7 +6,7 @@ interface IEventsCallbacks {
 }
 
 export class EventEmitter {
-    static listeners:IEventsCallbacks = {};  // key-value pair
+    static listeners:IEventsCallbacks = {};
 
     static addListener(event:string, fn: callbackFunction) {
         this.listeners[event] = this.listeners[event] || [];

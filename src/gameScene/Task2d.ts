@@ -1,13 +1,12 @@
 import Entity from "../entities/Entity";
 import GameScene from "./GameScene";
 import MathUtils from "../utils/MathUtils";
-import LineFactory from "../factories/LineFactory";
 import Line from "../entities/Line";
-import {EventEmitter} from "../utils/EventEmitter";
-import {Events} from "../constants/Events";
 import Sphere from "../entities/Sphere";
 import SquareFactory from "../factories/SquareFactory";
-import Constants from "../constants/Constants";
+import {EventEmitter} from "../utils/EventEmitter";
+import {Events} from "../constants/Events";
+import {InnerChart} from "../utils/InnerChart";
 
 type Coordinates =  "x"|"y"|"z";
 
@@ -27,59 +26,35 @@ export default class Task2d {
 
         this.addTaskObjectsToScene(objectNumber);
         this.addHandlers();
-        // EventEmitter.emit(Events.CHANGE_TO_2D);
     }
 
     private addHandlers() {
-        EventEmitter.addListener(Events.CHANGE_TO_2D, this.onChangeTo2D.bind(this));
+        EventEmitter.addListener(Events.ITERATE_STATS, this.iterate.bind(this))
     }
 
-    private onChangeTo2D() {
-        this.dimensions = 2;
-        this.scene.remove(...this.objects, this.center, this.centerMass);
-
-        this.addSquares();
-        this.center = Sphere.build(25, 50, 50, 0xFF0000, 0, 0, -50);
-        this.centerMass = Sphere.build(25, 50, 50, 0x008000, 10, 0, -30);
-        this.scene.add(this.center, this.centerMass, ...this.objects);
-    }
-
-    private addSquares() {
-        const points = [];
-        let xCurr = Constants.LEFT;
-        while (xCurr > Constants.RIGHT) {
-            points.push({x: xCurr, y: Constants.TOP});
-            xCurr -= 100;
-        }
-        let yCurr = Constants.TOP - 100;
-        const pointsNumber = points.length;
-        const startPoint = points[0];
-        while (yCurr > Constants.BOTTOM) {
-            for (let i = 0; i < pointsNumber; i++) {
-                points.push({x: points[i].x, y: yCurr});
-            }
-            yCurr -= 100;
-        }
-        for (let i = 0; i < points.length; i++) {
-            const square = SquareFactory.build(points[i].x, points[i].y);
+    private addSquares(objectNumber:number) {
+        this.scene.remove(...this.objects);
+        this.objects = [];
+        const actualNumber = Math.pow(objectNumber, 2);
+        for (let i = 0; i < actualNumber; i++) {
+            const square = SquareFactory.build();
             this.objects.push(square);
         }
+        this.formSquare(objectNumber);
     }
 
-    private addTaskObjectsToScene(objectNumber?:number) {
-        objectNumber = objectNumber || MathUtils.getRandomNumber(1, 6);
+    private async addTaskObjectsToScene(objectNumber?:number) {
+        objectNumber = objectNumber || MathUtils.getRandomNumber(2, 6);
 
-        for (let i = 0; i < objectNumber; i++) {
-            const line = LineFactory.build();
-            this._objects.push(line);
-        }
+        this.addSquares(2);
+        this.center = Sphere.build(25, 50, 50, 0xFF0000, 0, 0, -50);
+        this.centerMass = Sphere.build(25, 50, 50, 0x008000, 10, 0, -30);
 
         this._resetObjects = [...this._objects];
-        this.doGreedy();
-        this.doImproveGreedy();
-        this.pyramidAlgorithm();
-        this.centerMass = this.createCenterMass();
-        this.scene.add(...this._objects, this.center, this.centerMass);
+        await this.doGreedy();
+        // await this.doImproveGreedy();
+        // await this.pyramidAlgorithm();
+        this.scene.add(this.center, this.centerMass, ...this.objects);
 
     }
 
@@ -107,10 +82,25 @@ export default class Task2d {
         return isRecheckNeeded;
     }
 
-    private createCenterMass():Line {
-        const centerMass = this.getCenterMass();
-
-        return Line.build(0xFFFF00, 5, centerMass[0], true);
+    private async iterate(iterations:number, squaresNumber:number) {
+        console.log(iterations);
+        const results:AlgosResults = {
+            greedy: [],
+            bruteForce: [],
+            pyramid: []
+        };
+        for(let i = 0; i < iterations; i++) {
+            this.addSquares(squaresNumber);
+            this._resetObjects = [...this._objects];
+            this.scene.add(...this.objects);
+            const greedy = await this.doGreedy();
+            const bruteForce = await this.doImproveGreedy();
+            const pyramid = await this.pyramidAlgorithm();
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
+        }
+        new InnerChart(results);
     }
 
     private getCenterMass() {
@@ -129,21 +119,28 @@ export default class Task2d {
         }, 0) / overallWeight;
     }
 
-    private formLine() {
-        const lineWidth = this._objects.reduce((acc, curr) => {
-            acc += curr.getWidth();
-            return acc;
-        }, 0)
-        const start = this.center.position.x - lineWidth / 2;
-        this._objects.reduce((acc,curr) => {
-            curr.position.x = acc + curr.getWidth() / 2;
-            acc += curr.getWidth();
-            return acc;
-        }, start);
+    private formSquare(objectNumber:number) {
+        let xCurr = -(objectNumber) * 100 + (objectNumber / 2) * 100;
+        xCurr += objectNumber % 2 ? 50 : 50;
+        let yCurr = -(objectNumber / 2) * 100;
+        yCurr += objectNumber % 2 ? 50 : 50;
+        this.objects = this.objects.map((square, i)=> {
+            square.position.x = xCurr;
+            square.position.y = yCurr;
+            xCurr += 100;
+            if ((i + 1) % objectNumber === 0) {
+                yCurr += 100;
+                xCurr = -(objectNumber) * 100 + (objectNumber / 2) * 100;
+                xCurr += objectNumber % 2 ? 50 : 50;
+            }
+            return square;
+        });
     }
 
     public async doImproveGreedy() {
+        this.refreshScene();
         let difference = this.getDifference();
+        console.log(difference);
         let bestStructure:Entity[] = [];
         const resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
@@ -162,9 +159,12 @@ export default class Task2d {
         await this.refreshScene();
         this.reset();
         console.log(difference, 'BruteForce');
+        return difference;
     }
 
     public async doGreedy() {
+        this.refreshScene();
+        this.moveCenterMass();
         let difference = this.getDifference();
         let bestStructure:Entity[] = [];
         const resetObjects = [...this._objects];
@@ -183,9 +183,12 @@ export default class Task2d {
         this._objects = [...bestStructure];
         this.refreshScene(true);
         this.reset();
+        return difference;
     }
 
     public async pyramidAlgorithm() {
+        this.refreshScene();
+        this.moveCenterMass();
         this._objects = this._objects.sort((a, b) => a.weight - b.weight);
         await this.refreshScene();
         let newObjects = [...this._objects];
@@ -213,6 +216,7 @@ export default class Task2d {
             if (difference > this.getDifference()) {
                 bestStructure = [...this.objects];
                 difference = this.getDifference();
+                console.log(difference);
             }
             this._objects = [...resetObjects];
         }
@@ -220,15 +224,14 @@ export default class Task2d {
         await this.refreshScene();
         this.reset();
         console.log(this.getDifference(), 'Pyramid');
+        return this.getDifference();
     }
 
     public async refreshScene(isSkipAwait?:boolean, isSkipLine?: boolean) {
         if (!isSkipLine) {
             this.centerMass.visible = true;
             this.center.visible = true;
-            if (this.dimensions === 1) {
-                this.formLine();
-            }
+            this.formSquare(Math.sqrt(this.objects.length));
         }
         this.moveCenterMass();
         this.scene.render();
@@ -261,12 +264,6 @@ export default class Task2d {
 
     private swap(arr:Entity[], i:number, j:number) {
         [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-
-    private swapPositions(arr:Entity[], i:number, j:number) {
-        const temp = {...arr[i].position};
-        arr[i].position.set(arr[j].position.x, arr[j].position.y, arr[j].position.z);
-        arr[j].position.set(temp.x, temp.y, temp.z);
     }
 
     private getDifference = () => {

@@ -39,6 +39,7 @@
     },
     "dependencies": {
         "@types/three": "^0.127.1",
+        "chart.js": "^3.2.1",
         "dat.gui": "^0.7.7",
         "three": "^0.121.1",
         "three-mesh-ui": "^4.6.0",

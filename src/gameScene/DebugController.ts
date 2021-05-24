@@ -5,13 +5,18 @@ import MathUtils from "../utils/MathUtils";
 import Line from "../entities/Line";
 import {Events} from "../constants/Events";
 import {EventEmitter} from "../utils/EventEmitter";
+import Task2d from "./Task2d";
+import Task2dNoRender from "./Task2dNoRender";
 
+type Tasks = Task|Task2dNoRender|Task2d;
 
 export default class DebugController {
     private gui: GUI;
-    private task: Task;
+    private task: Tasks;
+    private iterations:number = 2;
+    private squares:number = 2;
 
-    constructor(task:Task) {
+    constructor(task:Task|Task2d) {
         this.gui = new dat.GUI();
         this.task = task;
         this.gui.addFolder('Camera');
@@ -35,7 +40,10 @@ export default class DebugController {
     }
 
     private createSquaresFolder(squares:GUI) {
-        squares.add({changeTo2D: this.changeTo2D.bind(this)}, "changeTo2D");
+        squares.add({iterations: this.iterations}, "iterations").onChange((value => this.iterations = value));
+        squares.add({squares: this.squares}, "squares").onChange((value => this.squares = value));
+        squares.add({iterate: this.callIteration.bind(this)}, "iterate");
+
     }
 
     private createDebugLines() {
@@ -61,8 +69,8 @@ export default class DebugController {
         // this.task.objects.push(Line.build(color, 200, 0));
     }
 
-    private changeTo2D() {
-        EventEmitter.emit(Events.CHANGE_TO_2D);
+    private callIteration() {
+        EventEmitter.emit(Events.ITERATE_STATS, this.iterations, this.squares);
     }
 
 }

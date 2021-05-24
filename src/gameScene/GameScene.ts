@@ -1,6 +1,6 @@
 import * as THREE from "three";
 // import Sphere from "../entities/Sphere";
-import SpotLight from "../lights/SpotLight";
+// import SpotLight from "../lights/SpotLight";
 import Constants from "../constants/Constants";
 import {HemiLight} from "../lights/HemiLight";
 import DebugController from "./DebugController";
@@ -9,33 +9,37 @@ import {DragControls} from "three/examples/jsm/controls/DragControls";
 import {Object3D} from "three";
 import {Events} from "../constants/Events";
 import {EventEmitter} from "../utils/EventEmitter";
+import Task2d from "./Task2d";
+import Task2dNoRender from "./Task2dNoRender";
 // import {DragControls} from "three/examples/jsm/controls/DragControls";
 
-
+type Tasks = Task|Task2dNoRender|Task2d;
 export default class GameScene extends THREE.Scene {
-    private readonly _camera:THREE.Camera;
+    private _camera:THREE.Camera;
     private readonly _container:HTMLElement;
     private _renderer:THREE.WebGLRenderer;
     private recheckIntersection = true;
+    private _task:Tasks;
 
     constructor() {
         super();
         this._container = document.createElement("div");
         document.body.appendChild(this._container);
         this._renderer = new THREE.WebGLRenderer({antialias: true, alpha: false});
-        this._camera = new THREE.OrthographicCamera(Constants.WIDTH / -2, Constants.WIDTH / 2, Constants.HEIGHT / 2, Constants.HEIGHT / -2, 1, 1000);
+        const zoomFactor = 0;
+        this._camera = new THREE.OrthographicCamera(Constants.WIDTH / -2 - zoomFactor, Constants.WIDTH / 2 + zoomFactor, Constants.HEIGHT / 2 + zoomFactor, Constants.HEIGHT / -2 - zoomFactor, 1, 1000);
         this.fog = new THREE.Fog(0x23272a, 0.5, 1700);
 
-        const task = new Task(1, this);
+        this._task = new Task2d(2, this);
 
-        new DebugController(task);
+        new DebugController(this._task);
         this.setCameraProperties();
         this.setRendererProperties();
         this.addLights();
-        this.addDragControls(task.objects);
+        this.addDragControls(this._task.objects);
         this.addHandlers();
 
-        this.animate(task);
+        this.animate();
     }
 
     private addHandlers() {
@@ -81,20 +85,22 @@ export default class GameScene extends THREE.Scene {
     }
 
     private onChangeTo2D() {
-        console.log('TO 2D!!!')
+        this.remove(...this.children);
+
     }
 
     public render() {
         this._renderer.render(this, this._camera);
     }
 
-    private animate(task:Task) {
-        requestAnimationFrame(this.animate.bind(this, task));
+    private animate() {
+        requestAnimationFrame(this.animate.bind(this, this._task));
         this.render();
         if (this.recheckIntersection) {
-            this.recheckIntersection = task.clearIntersection();
+            this.recheckIntersection = this._task.clearIntersection();
         }
-        task.moveCenterMass();
+
+        this._task.moveCenterMass();
     }
 }
 

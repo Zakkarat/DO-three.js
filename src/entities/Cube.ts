@@ -1,7 +1,8 @@
 import * as THREE from "three";
-import {MeshLambertMaterial} from "three";
-import Entity from "./Entity";
 import {Text} from "troika-three-text";
+import EntityNR from "./EntityNR";
+import Entity from "./Entity";
+import {MeshLambertMaterial} from "three";
 
 export default class Cube extends Entity {
     static build(color:number, x:number, y:number, weight?:number):Cube {
@@ -16,6 +17,12 @@ export default class Cube extends Entity {
         result.position.set(x, y, -50);
         return result;
     }
+    // static build(color:number, x:number, y:number, weight?:number):Cube {
+    //     let result = new Cube();
+    //     result.addWeightLabel();
+    //     result.position.set(x, y, -50);
+    //     return result;
+    // }
 
     protected addWeightLabel():void {
         const weightLabel = new Text();
