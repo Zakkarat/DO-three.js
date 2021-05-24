@@ -11,6 +11,7 @@ import {Events} from "../constants/Events";
 import {EventEmitter} from "../utils/EventEmitter";
 import Task2d from "./Task2d";
 import Task2dNoRender from "./Task2dNoRender";
+import TaskNoRender from "./TaskNoRender";
 // import {DragControls} from "three/examples/jsm/controls/DragControls";
 
 type Tasks = Task|Task2dNoRender|Task2d;
@@ -18,7 +19,6 @@ export default class GameScene extends THREE.Scene {
     private _camera:THREE.Camera;
     private readonly _container:HTMLElement;
     private _renderer:THREE.WebGLRenderer;
-    private recheckIntersection = true;
     private _task:Tasks;
 
     constructor() {
@@ -30,7 +30,7 @@ export default class GameScene extends THREE.Scene {
         this._camera = new THREE.OrthographicCamera(Constants.WIDTH / -2 - zoomFactor, Constants.WIDTH / 2 + zoomFactor, Constants.HEIGHT / 2 + zoomFactor, Constants.HEIGHT / -2 - zoomFactor, 1, 1000);
         this.fog = new THREE.Fog(0x23272a, 0.5, 1700);
 
-        this._task = new Task2d(2, this);
+        this._task = new Task2dNoRender(2, this);
 
         new DebugController(this._task);
         this.setCameraProperties();
@@ -39,7 +39,7 @@ export default class GameScene extends THREE.Scene {
         this.addDragControls(this._task.objects);
         this.addHandlers();
 
-        this.animate();
+        // this.animate();
     }
 
     private addHandlers() {
@@ -96,9 +96,6 @@ export default class GameScene extends THREE.Scene {
     private animate() {
         requestAnimationFrame(this.animate.bind(this, this._task));
         this.render();
-        if (this.recheckIntersection) {
-            this.recheckIntersection = this._task.clearIntersection();
-        }
 
         this._task.moveCenterMass();
     }

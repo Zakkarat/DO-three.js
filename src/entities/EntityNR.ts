@@ -8,6 +8,7 @@ export default abstract class EntityNR {
     protected _initialTime:number = 0;
     protected _finalTime:number = 0;
     protected _now:number = 0;
+    protected _width:number = 100;
     protected _weight:number = MathUtils.getRandomNumber(0, 100);
 
     public abstract getWidth():number;
@@ -22,6 +23,14 @@ export default abstract class EntityNR {
 
     get position():Vector3 {
         return this._position;
+    }
+
+    get width():number {
+        return this._width;
+    }
+
+    set width(value:number) {
+        this._width = value;
     }
 
     set position(value:Vector3) {

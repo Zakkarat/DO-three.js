@@ -58,7 +58,7 @@ export default class Task2dNoRender {
 
     }
 
-    private iterate(iterations:number, squaresNumber:number) {
+    private iterate(iterations:number, squaresNumber:number, maxWeight:number) {
         console.log(iterations);
         const results:AlgosResults = {
             greedy: [],
@@ -67,7 +67,7 @@ export default class Task2dNoRender {
         };
         this.addSquares(squaresNumber);
         for(let i = 0; i < iterations; i++) {
-            this.randomizeWeights();
+            this.randomizeWeights(maxWeight);
             console.log(i);
             this._resetObjects = [...this._objects];
             const greedy = this.doGreedy();
@@ -80,8 +80,8 @@ export default class Task2dNoRender {
         new InnerChart(results);
     }
 
-    private randomizeWeights() {
-        this._objects.forEach(elem => elem.weight = MathUtils.getRandomNumber(0, 100));
+    private randomizeWeights(maxWeight:number) {
+        this._objects.forEach(elem => elem.weight = MathUtils.getRandomNumber(0, maxWeight));
     }
 
     private getCenterMass() {
@@ -119,6 +119,7 @@ export default class Task2dNoRender {
     }
 
     public doImproveGreedy() {
+        this.moveCenterMass();
         let difference = this.getDifference();
         let bestStructure:Cube[] = [...this._objects];
         console.log(difference, 'startDifference');
@@ -128,7 +129,6 @@ export default class Task2dNoRender {
                 this.swap(bestStructure, i, j);
                 this.moveCenterMass();
                 if (difference > this.getDifference()) {
-                    bestStructure = [...this._objects];
                     resetObjects = [...bestStructure];
                     difference = this.getDifference();
                 } else {
@@ -167,8 +167,10 @@ export default class Task2dNoRender {
 
     public pyramidAlgorithm() {
         this.moveCenterMass();
-        this._objects = this._objects.sort((a, b) => a.weight - b.weight);
-        let newObjects = [...this._objects];
+        console.log(this.getDifference(), 'start')
+        const sortedObjects = this._objects.sort((a, b) => a.weight - b.weight);
+        this.moveCenterMass();
+        let newObjects = [...sortedObjects];
         newObjects = newObjects.sort((a, b) => a.weight - b.weight);
         const left:Cube[] = [];
         const right:Cube[] = [];
@@ -183,22 +185,28 @@ export default class Task2dNoRender {
             return b.weight - a.weight;
         });
         this._objects = left.concat(right);
+        this.moveCenterMass();
+        this.formSquare(Math.sqrt(this._objects.length));
+        console.log(this.getDifference());
         let difference = this.getDifference();
         const resetObjects = [...this._objects];
         let bestStructure:Cube[] = [];
         for (let i = 0; i < this._objects.length; i++) {
             this.swap(this._objects, i, this._objects.length - 1 - i);
-            if (difference > this.getDifference()) {
+            this.moveCenterMass();
+            const newDifference =  this.getDifference();
+            if (difference > newDifference) {
                 bestStructure = [...this.objects];
-                difference = this.getDifference();
+                difference = newDifference;
                 console.log(difference);
             }
             this._objects = [...resetObjects];
         }
         this._objects = [...bestStructure];
+        this.moveCenterMass();
         this.reset();
-        console.log(this.getDifference(), 'Pyramid');
-        return this.getDifference();
+        console.log(difference, 'Pyramid');
+        return difference;
     }
 
     public async refreshScene(isSkipAwait?:boolean, isSkipLine?: boolean) {

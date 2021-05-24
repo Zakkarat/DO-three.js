@@ -46,14 +46,14 @@ export default class Task2d {
     private async addTaskObjectsToScene(objectNumber?:number) {
         objectNumber = objectNumber || MathUtils.getRandomNumber(2, 6);
 
-        this.addSquares(2);
+        this.addSquares(10);
         this.center = Sphere.build(25, 50, 50, 0xFF0000, 0, 0, -50);
         this.centerMass = Sphere.build(25, 50, 50, 0x008000, 10, 0, -30);
 
         this._resetObjects = [...this._objects];
-        await this.doGreedy();
-        // await this.doImproveGreedy();
-        // await this.pyramidAlgorithm();
+        // await this.doGreedy();
+        await this.doImproveGreedy();
+        await this.pyramidAlgorithm();
         this.scene.add(this.center, this.centerMass, ...this.objects);
 
     }
@@ -189,6 +189,7 @@ export default class Task2d {
     public async pyramidAlgorithm() {
         this.refreshScene();
         this.moveCenterMass();
+        console.log(this.getDifference(), 'start')
         this._objects = this._objects.sort((a, b) => a.weight - b.weight);
         await this.refreshScene();
         let newObjects = [...this._objects];

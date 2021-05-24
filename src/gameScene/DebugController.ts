@@ -13,8 +13,9 @@ type Tasks = Task|Task2dNoRender|Task2d;
 export default class DebugController {
     private gui: GUI;
     private task: Tasks;
-    private iterations:number = 2;
-    private squares:number = 2;
+    private iterations:number = 10;
+    private entities:number = 10;
+    private weight:number = 100;
 
     constructor(task:Task|Task2d) {
         this.gui = new dat.GUI();
@@ -22,8 +23,10 @@ export default class DebugController {
         this.gui.addFolder('Camera');
         const lines = this.gui.addFolder('Lines');
         const squares = this.gui.addFolder('Squares');
+        const iterations = this.gui.addFolder('Iterations');
         this.createLinesFolder(lines);
         this.createSquaresFolder(squares);
+        this.createIterationFolder(iterations);
     }
 
     private createLinesFolder(lines:GUI) {
@@ -40,8 +43,22 @@ export default class DebugController {
     }
 
     private createSquaresFolder(squares:GUI) {
+        const isSequentialChanger = squares.add({isSequential: this.task.isSequential}, "isSequential");
+        squares.add({createLine: this.createDebugLines.bind(this)}, "createLine");
+        squares.add({doGreedy: this.task.doGreedy.bind(this.task)}, "doGreedy");
+        squares.add({doImproveGreedy: this.task.doImproveGreedy.bind(this.task)}, "doImproveGreedy");
+        squares.add({pyramidAlgorithm: this.task.pyramidAlgorithm.bind(this.task)}, "pyramidAlgorithm");
+        squares.add({refresh: this.task.refreshScene.bind(this.task)}, "refresh");
+        squares.add({reset: this.task.reset.bind(this.task)}, "reset");
+        squares.add({next: this.task.next.bind(this.task)}, "next");
+
+        isSequentialChanger.onChange((value => this.task.isSequential = value));
+    }
+
+    private createIterationFolder(squares:GUI) {
         squares.add({iterations: this.iterations}, "iterations").onChange((value => this.iterations = value));
-        squares.add({squares: this.squares}, "squares").onChange((value => this.squares = value));
+        squares.add({entities: this.entities}, "entities").onChange((value => this.entities = value));
+        squares.add({weight: this.weight}, "weight").onChange((value => this.weight = value));
         squares.add({iterate: this.callIteration.bind(this)}, "iterate");
 
     }
@@ -70,7 +87,7 @@ export default class DebugController {
     }
 
     private callIteration() {
-        EventEmitter.emit(Events.ITERATE_STATS, this.iterations, this.squares);
+        EventEmitter.emit(Events.ITERATE_STATS, this.iterations, this.entities, this.weight);
     }
 
 }

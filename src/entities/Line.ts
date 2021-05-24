@@ -3,6 +3,7 @@ import {BoxGeometry, MeshLambertMaterial} from "three";
 import {Text} from 'troika-three-text';
 
 import Entity from "./Entity";
+import EntityNR from "./EntityNR";
 
 export default class Line extends Entity {
     static build(color:number, width:number, x:number, isVertical?:boolean, weight?:number):Line {
@@ -23,6 +24,18 @@ export default class Line extends Entity {
         }
         return result;
     }
+    // static build(color:number, width:number, x:number, isVertical?:boolean, weight?:number):Line {
+    //     let result = new Line();
+    //     result.position.set(x, -50, -50);
+    //     if(weight) {
+    //         result._weight = weight;
+    //     }
+    //     result.width = width;
+    //     if (!isVertical) {
+    //         result.addWeightLabel();
+    //     }
+    //     return result;
+    // }
 
     protected addWeightLabel() {
         const weightLabel = new Text();
@@ -41,6 +54,14 @@ export default class Line extends Entity {
 
     public getWidth() {
         return (this.geometry as BoxGeometry).parameters.width;
+    }
+
+    get width():number {
+        return this._width;
+    }
+
+    set width(value:number) {
+        this._width = value;
     }
 
     public getBoundaries() {

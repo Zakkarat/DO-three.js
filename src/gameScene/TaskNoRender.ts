@@ -1,16 +1,19 @@
 import Entity from "../entities/Entity";
 import GameScene from "./GameScene";
 import MathUtils from "../utils/MathUtils";
-import LineFactory from "../factories/LineFactory";
 import Line from "../entities/Line";
+import {EventEmitter} from "../utils/EventEmitter";
+import {Events} from "../constants/Events";
+import {InnerChart} from "../utils/InnerChart";
+import LineFactory from "../factories/LineFactory";
 
 type Coordinates =  "x"|"y"|"z";
 
-export default class Task {
+export default class TaskNoRender {
     private dimensions: number;
     private scene: GameScene;
-    private _objects: Entity[] = [];
-    private _resetObjects: Entity[] = [];
+    private _objects: Line[] = [];
+    private _resetObjects: Line[] = [];
     public center: Entity = Line.build(0xFF0000, 5, 0, true);
     public centerMass: Entity = Line.build(0xFF0000, 5, 0, true);
     private _resolver: (value:unknown) => void = () => {};
@@ -21,54 +24,58 @@ export default class Task {
         this.scene = scene;
 
         this.addTaskObjectsToScene(objectNumber);
+        this.addHandlers();
     }
 
-    private async addTaskObjectsToScene(objectNumber?:number) {
-        objectNumber = objectNumber || MathUtils.getRandomNumber(10, 15);
+    private addHandlers() {
+        EventEmitter.addListener(Events.ITERATE_STATS, this.iterate.bind(this))
+    }
 
-        for (let i = 0; i < 10; i++) {
+    private addLines(objectNumber:number) {
+        for (let i = 0; i < objectNumber; i++) {
             const line = LineFactory.build();
             this._objects.push(line);
         }
+        this._resetObjects = [...this._objects];
+    }
+
+    private async addTaskObjectsToScene(objectNumber?:number) {
+        objectNumber = objectNumber || MathUtils.getRandomNumber(2, 6);
+
+        this.addLines(2);
 
         this._resetObjects = [...this._objects];
-        // await this.doGreedy();
+        await this.doGreedy();
         // await this.doImproveGreedy();
-        await this.pyramidAlgorithm();
-        console.log(this.objects)
-        this.centerMass = this.createCenterMass();
-        this.scene.add(...this._objects, this.center, this.centerMass);
+        // await this.pyramidAlgorithm();
+        // this.scene.add(this.center, this.centerMass, ...this.objects);
 
     }
 
-    public clearIntersection():boolean {
-        let isRecheckNeeded = false;
-        for (let i = 0; i < this.objects.length; i++) {
-            for (let j = 0; j < this.objects.length; j++) {
-                if (i === j) {
-                    break;
-                }
-                let currentObjectBounds = this.objects[i].getBoundaries();
-                let neighborObjectBounds = this.objects[j].getBoundaries();
-                let mover = 1;
-                if (MathUtils.isIntersect(currentObjectBounds, neighborObjectBounds)){
-                    isRecheckNeeded = true;
-                    this.objects[i].position.x += 1;
-                    currentObjectBounds = this.objects[i].getBoundaries();
-                    neighborObjectBounds = this.objects[j].getBoundaries();
-                    if (this.objects[i].position.x > 400 || this.objects[i].position.x < 400) {
-                        mover = -mover;
-                    }
-                }
-            }
+    private iterate(iterations:number, lineNumber:number, maxWeight:number) {
+        console.log(iterations);
+        const results:AlgosResults = {
+            greedy: [],
+            bruteForce: [],
+            pyramid: []
+        };
+        this.addLines(lineNumber);
+        for(let i = 0; i < iterations; i++) {
+            this.randomizeWeights(maxWeight);
+            console.log(i);
+            this._resetObjects = [...this._objects];
+            const greedy = this.doGreedy();
+            const bruteForce = this.doImproveGreedy();
+            const pyramid = this.pyramidAlgorithm();
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
         }
-        return isRecheckNeeded;
+        new InnerChart(results);
     }
 
-    private createCenterMass():Line {
-        const centerMass = this.getCenterMass();
-
-        return Line.build(0xFFFF00, 5, centerMass[0], true);
+    private randomizeWeights(maxWeight:number) {
+        this._objects.forEach(elem => elem.weight = MathUtils.getRandomNumber(0, maxWeight));
     }
 
     private getCenterMass() {
@@ -89,70 +96,71 @@ export default class Task {
 
     private formLine() {
         const lineWidth = this._objects.reduce((acc, curr) => {
-            acc += curr.getWidth();
+            acc += curr.width;
             return acc;
         }, 0)
         const start = this.center.position.x - lineWidth / 2;
         this._objects.reduce((acc,curr) => {
-            curr.position.x = acc + curr.getWidth() / 2;
-            acc += curr.getWidth();
+            curr.position.x = acc + curr.width / 2;
+            acc += curr.width;
             return acc;
         }, start);
     }
 
-    public async doImproveGreedy() {
+    public doImproveGreedy() {
+        this.moveCenterMass();
         let difference = this.getDifference();
-        let bestStructure:Entity[] = [];
-        const resetObjects = [...this._objects];
+        let bestStructure:Line[] = [...this._objects];
+        console.log(difference, 'startDifference');
+        let resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
             for (let j = 0; j < this._objects.length; j++) {
-                this.swap(this._objects, i, j);
-                await this.refreshScene();
+                this.swap(bestStructure, i, j);
+                this.moveCenterMass();
                 if (difference > this.getDifference()) {
-                    bestStructure = [...this._objects];
+                    resetObjects = [...bestStructure];
                     difference = this.getDifference();
                 } else {
-                    this._objects = [...resetObjects];
+                    bestStructure = [...resetObjects];
                 }
             }
         }
         this._objects = [...bestStructure];
-        await this.refreshScene();
         this.reset();
         console.log(difference, 'BruteForce');
+        return difference;
     }
 
-    public async doGreedy() {
+    public doGreedy() {
+        this.moveCenterMass();
         let difference = this.getDifference();
-        let bestStructure:Entity[] = [];
+        let bestStructure:Line[] = [];
         const resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
             for (let j = 0; j < this._objects.length; j++) {
                 this.swap(this._objects, i, j);
-                await this.refreshScene();
-                if (difference > this.getDifference()) {
+                this.moveCenterMass();
+                const newDifference =  this.getDifference();
+                if (difference > newDifference) {
                     bestStructure = [...this.objects];
-                    difference = this.getDifference();
+                    difference = newDifference;
                 }
                 this._objects = [...resetObjects];
             }
         }
         console.log(difference, 'Greedy');
         this._objects = [...bestStructure];
-        this.refreshScene(true);
         this.reset();
+        return difference;
     }
 
-    public async pyramidAlgorithm() {
-        this.refreshScene();
-        this.moveCenterMass();
-        console.log(this.getDifference(), 'start')
+    public pyramidAlgorithm() {
         this._objects = this._objects.sort((a, b) => a.weight - b.weight);
-        await this.refreshScene();
+        this.formLine();
         let newObjects = [...this._objects];
         newObjects = newObjects.sort((a, b) => a.weight - b.weight);
-        const left:Entity[] = [];
-        const right:Entity[] = [];
+        const left:Line[] = [];
+        const right:Line[] = [];
         newObjects.forEach((elem, i) => {
             if (i % 2 === 0) {
                 left.push(elem);
@@ -165,24 +173,24 @@ export default class Task {
         });
         this._objects = left.concat(right);
         let difference = this.getDifference();
-        await this.refreshScene();
-        const resetObjects = [...this._objects];
-        let bestStructure:Entity[] = [];
+        this.formLine();
+        let resetObjects = [...this._objects];
+        let bestStructure:Line[] = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
-            this.swap(this._objects, i, this._objects.length - 1 - i);
-            await this.refreshScene();
+            this.swap(bestStructure, i, bestStructure.length - 1 - i);
+            this.formLine();
             if (difference > this.getDifference()) {
-                bestStructure = [...this.objects];
+                bestStructure = [...bestStructure];
+                resetObjects = [...bestStructure];
                 difference = this.getDifference();
-                console.log(difference);
+            } else {
+                bestStructure = [...resetObjects];
             }
-            this._objects = [...resetObjects];
         }
         this._objects = [...bestStructure];
-        await this.refreshScene();
+        this.formLine();
         this.reset();
-        console.log(this.getDifference(), 'Pyramid');
-        return this.getDifference();
+        return difference;
     }
 
     public async refreshScene(isSkipAwait?:boolean, isSkipLine?: boolean) {
@@ -196,14 +204,6 @@ export default class Task {
         if (this.isSequential && !isSkipAwait) {
             await this.createAwaiter();
         }
-    }
-
-    public reformScene(newEntities: Entity[]) {
-        this.scene.remove(...this.objects);
-        this.objects = [...newEntities];
-        this._resetObjects = [...newEntities];
-        this.scene.add(...this.objects);
-        this.refreshScene(true, true);
     }
 
     public reset() {
@@ -220,36 +220,26 @@ export default class Task {
         this._resolver(true);
     }
 
-    private swap(arr:Entity[], i:number, j:number) {
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+    private swap(arr:Line[], i:number, j:number) {
+        const {x} = arr[i].position;
+        arr[i].position.x = arr[j].position.x;
+        arr[j].position.x = x;
     }
 
     private getDifference = () => {
         let reducer = 0;
         reducer += Math.pow(this.center.position.x - this.centerMass.position.x, 2);
-        if (this.dimensions > 1) {
-            reducer += Math.pow(this.center.position.y - this.centerMass.position.y, 2);
-        }
-        if (this.dimensions > 2) {
-            reducer += Math.pow(this.center.position.z - this.centerMass.position.z, 2);
-        }
         return Math.sqrt(reducer);
     }
 
     public moveCenterMass() {
         this.centerMass.position.x = this.getCenterMass()[0];
-        if (this.dimensions > 1) {
-            this.centerMass.position.y = this.getCenterMass()[1];
-        }
-        if (this.dimensions > 2) {
-            this.centerMass.position.z = this.getCenterMass()[2];
-        }
     }
 
-    get objects():Entity[] {
+    get objects():Line[] {
         return this._objects;
     }
-    set objects(value:Entity[]) {
+    set objects(value:Line[]) {
         this._objects = value;
     }
 }
