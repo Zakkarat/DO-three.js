@@ -1,5 +1,5 @@
 
-type callbackFunction = (data?:any) => any;
+type callbackFunction = (...args:any) => any;
 
 interface IEventsCallbacks {
     [key:string]:callbackFunction[];

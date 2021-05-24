@@ -11,7 +11,6 @@ import {Events} from "../constants/Events";
 import {EventEmitter} from "../utils/EventEmitter";
 import Task2d from "./Task2d";
 import Task2dNoRender from "./Task2dNoRender";
-import TaskNoRender from "./TaskNoRender";
 // import {DragControls} from "three/examples/jsm/controls/DragControls";
 
 type Tasks = Task|Task2dNoRender|Task2d;
@@ -32,10 +31,12 @@ export default class GameScene extends THREE.Scene {
 
         this._task = new Task2dNoRender(2, this);
 
+        // @ts-ignore
         new DebugController(this._task);
         this.setCameraProperties();
         this.setRendererProperties();
         this.addLights();
+        // @ts-ignore
         this.addDragControls(this._task.objects);
         this.addHandlers();
 
@@ -55,7 +56,6 @@ export default class GameScene extends THREE.Scene {
             event.object.onDrag(); // This will prevent moving z axis, but will be on 0 line. change this to your object position of z axis.
         })
         controls.addEventListener("dragend", (event) => {
-            this.recheckIntersection = true;
             event.object.onDragEnd();
         });
     }
@@ -93,6 +93,7 @@ export default class GameScene extends THREE.Scene {
         this._renderer.render(this, this._camera);
     }
 
+    // @ts-ignore
     private animate() {
         requestAnimationFrame(this.animate.bind(this, this._task));
         this.render();

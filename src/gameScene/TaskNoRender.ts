@@ -10,6 +10,7 @@ import LineFactory from "../factories/LineFactory";
 type Coordinates =  "x"|"y"|"z";
 
 export default class TaskNoRender {
+    // @ts-ignore
     private dimensions: number;
     private scene: GameScene;
     private _objects: Line[] = [];
@@ -155,8 +156,8 @@ export default class TaskNoRender {
     }
 
     public pyramidAlgorithm() {
+        this.moveCenterMass();
         this._objects = this._objects.sort((a, b) => a.weight - b.weight);
-        this.formLine();
         let newObjects = [...this._objects];
         newObjects = newObjects.sort((a, b) => a.weight - b.weight);
         const left:Line[] = [];
@@ -171,14 +172,14 @@ export default class TaskNoRender {
         right.sort((a, b) => {
             return b.weight - a.weight;
         });
+        this.moveCenterMass();
         this._objects = left.concat(right);
         let difference = this.getDifference();
-        this.formLine();
         let resetObjects = [...this._objects];
         let bestStructure:Line[] = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
             this.swap(bestStructure, i, bestStructure.length - 1 - i);
-            this.formLine();
+            this.moveCenterMass();
             if (difference > this.getDifference()) {
                 bestStructure = [...bestStructure];
                 resetObjects = [...bestStructure];
@@ -188,7 +189,7 @@ export default class TaskNoRender {
             }
         }
         this._objects = [...bestStructure];
-        this.formLine();
+        console.log(difference, 'Pyramid');
         this.reset();
         return difference;
     }

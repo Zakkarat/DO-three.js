@@ -1,5 +1,4 @@
 import {Chart, ChartDataset, registerables} from 'chart.js';
-import MathUtils from "./MathUtils";
 Chart.register(...registerables);
 
 

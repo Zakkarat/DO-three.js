@@ -38,6 +38,7 @@ export default class Task2d {
         const actualNumber = Math.pow(objectNumber, 2);
         for (let i = 0; i < actualNumber; i++) {
             const square = SquareFactory.build();
+            // @ts-ignore
             this.objects.push(square);
         }
         this.formSquare(objectNumber);

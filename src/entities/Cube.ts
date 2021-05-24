@@ -1,7 +1,11 @@
+// @ts-ignore
 import * as THREE from "three";
+// @ts-ignore
 import {Text} from "troika-three-text";
 import EntityNR from "./EntityNR";
+// @ts-ignore
 import Entity from "./Entity";
+// @ts-ignore
 import {MeshLambertMaterial} from "three";
 
 export default class Cube extends EntityNR {
@@ -17,6 +21,7 @@ export default class Cube extends EntityNR {
     //     result.position.set(x, y, -50);
     //     return result;
     // }
+    // @ts-ignore
     static build(color:number, x:number, y:number, weight?:number):Cube {
         let result = new Cube();
         result.addWeightLabel();

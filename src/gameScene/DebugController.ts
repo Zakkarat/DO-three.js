@@ -80,6 +80,7 @@ export default class DebugController {
             acc += curr.getWidth() + 20;
             return acc;
         }, start);
+        // @ts-ignore
         this.task.reformScene(lines);
         this.task.centerMass.visible = false;
         this.task.center.visible = false;

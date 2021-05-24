@@ -3,7 +3,6 @@ import {BoxGeometry, MeshLambertMaterial} from "three";
 import {Text} from 'troika-three-text';
 
 import Entity from "./Entity";
-import EntityNR from "./EntityNR";
 
 export default class Line extends Entity {
     static build(color:number, width:number, x:number, isVertical?:boolean, weight?:number):Line {
@@ -57,10 +56,12 @@ export default class Line extends Entity {
     }
 
     get width():number {
+        // @ts-ignore
         return this._width;
     }
 
     set width(value:number) {
+        // @ts-ignore
         this._width = value;
     }
 

@@ -30,7 +30,7 @@ export default class Task2dNoRender {
     }
 
     private addHandlers() {
-        EventEmitter.addListener(Events.ITERATE_STATS, this.iterate.bind(this))
+        EventEmitter.addListener(Events.ITERATE_STATS, this.iterateQuantity.bind(this))
     }
 
     private addSquares(objectNumber:number) {
@@ -58,6 +58,7 @@ export default class Task2dNoRender {
 
     }
 
+    // @ts-ignore
     private iterate(iterations:number, squaresNumber:number, maxWeight:number) {
         console.log(iterations);
         const results:AlgosResults = {
@@ -78,6 +79,58 @@ export default class Task2dNoRender {
             results.pyramid.push(pyramid);
         }
         new InnerChart(results);
+    }
+
+    // @ts-ignore
+    private iterateTime(iterations:number, squaresNumber:number, maxWeight:number) {
+        console.log(iterations);
+        const results:AlgosResults = {
+            greedy: [],
+            bruteForce: [],
+            pyramid: []
+        };
+        for(let i = 0; i < iterations; i++) {
+            this.addSquares(i);
+            this.randomizeWeights(maxWeight);
+            console.log(i);
+            this._resetObjects = [...this._objects];
+            const greedy = this.checkTime(this.doGreedy.bind(this));
+            const bruteForce = this.checkTime(this.doImproveGreedy.bind(this));
+            const pyramid = this.checkTime(this.pyramidAlgorithm.bind(this));
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
+        }
+        new InnerChart(results);
+    }
+
+    private iterateQuantity(iterations:number, maxWeight:number) {
+        console.log(iterations);
+        const results:AlgosResults = {
+            greedy: [],
+            bruteForce: [],
+            pyramid: []
+        };
+        for(let i = 0; i < iterations; i++) {
+            this.addSquares(i + 1);
+            this.randomizeWeights(maxWeight);
+            console.log(i);
+            this._resetObjects = [...this._objects];
+            const greedy = this.doGreedy();
+            const bruteForce = this.doImproveGreedy();
+            const pyramid = this.pyramidAlgorithm();
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
+        }
+        new InnerChart(results);
+    }
+
+    private checkTime(cb: () => number) {
+        const t1 = performance.now();
+        cb();
+        const t2 = performance.now();
+        return t2 - t1;
     }
 
     private randomizeWeights(maxWeight:number) {

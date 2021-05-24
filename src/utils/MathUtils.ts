@@ -1,6 +1,6 @@
 import Constants from "../constants/Constants";
 import * as THREE from "three";
-import {Vector2, Vector3} from "three";
+import {Vector3} from "three";
 import Entity from "../entities/Entity";
 
 export default class MathUtils {

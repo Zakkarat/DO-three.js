@@ -1,6 +1,5 @@
 import {BoxGeometry, MeshLambertMaterial, SphereBufferGeometry} from "three";
 import Entity from "./Entity";
-import {Text} from "troika-three-text";
 
 export default class Sphere extends Entity {
     static build(radius:number, widthSegments:number, heightSegments:number,
