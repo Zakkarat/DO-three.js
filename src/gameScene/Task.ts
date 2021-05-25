@@ -3,11 +3,6 @@ import GameScene from "./GameScene";
 import MathUtils from "../utils/MathUtils";
 import LineFactory from "../factories/LineFactory";
 import Line from "../entities/Line";
-import {EventEmitter} from "../utils/EventEmitter";
-import {Events} from "../constants/Events";
-import Sphere from "../entities/Sphere";
-import SquareFactory from "../factories/SquareFactory";
-import Constants from "../constants/Constants";
 
 type Coordinates =  "x"|"y"|"z";
 
@@ -28,7 +23,7 @@ export default class Task {
         this.addTaskObjectsToScene(objectNumber);
     }
 
-    private addTaskObjectsToScene(objectNumber?:number) {
+    private async addTaskObjectsToScene(objectNumber?:number) {
         objectNumber = objectNumber || MathUtils.getRandomNumber(1, 6);
 
         for (let i = 0; i < objectNumber; i++) {
@@ -37,9 +32,9 @@ export default class Task {
         }
 
         this._resetObjects = [...this._objects];
-        this.doGreedy();
-        this.doImproveGreedy();
-        this.pyramidAlgorithm();
+        await this.doGreedy();
+        await this.doImproveGreedy();
+        await this.pyramidAlgorithm();
         this.centerMass = this.createCenterMass();
         this.scene.add(...this._objects, this.center, this.centerMass);
 
@@ -105,15 +100,17 @@ export default class Task {
     }
 
     public async doImproveGreedy() {
+        await this.refreshScene(true);
         let difference = this.getDifference();
         let bestStructure:Entity[] = [];
-        const resetObjects = [...this._objects];
+        let resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
             for (let j = 0; j < this._objects.length; j++) {
                 this.swap(this._objects, i, j);
                 await this.refreshScene();
                 if (difference > this.getDifference()) {
                     bestStructure = [...this._objects];
+                    resetObjects = [...bestStructure];
                     difference = this.getDifference();
                 } else {
                     this._objects = [...resetObjects];
@@ -127,9 +124,10 @@ export default class Task {
     }
 
     public async doGreedy() {
+        await this.refreshScene(true);
         let difference = this.getDifference();
         let bestStructure:Entity[] = [];
-        const resetObjects = [...this._objects];
+        let resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
             for (let j = 0; j < this._objects.length; j++) {
                 this.swap(this._objects, i, j);
@@ -143,11 +141,13 @@ export default class Task {
         }
         console.log(difference, 'Greedy');
         this._objects = [...bestStructure];
-        this.refreshScene(true);
+        await this.refreshScene(true);
         this.reset();
     }
 
     public async pyramidAlgorithm() {
+        await this.refreshScene();
+        this.moveCenterMass();
         this._objects = this._objects.sort((a, b) => a.weight - b.weight);
         await this.refreshScene();
         let newObjects = [...this._objects];
@@ -165,32 +165,34 @@ export default class Task {
             return b.weight - a.weight;
         });
         this._objects = left.concat(right);
-        let difference = this.getDifference();
         await this.refreshScene();
-        const resetObjects = [...this._objects];
-        let bestStructure:Entity[] = [];
+        let difference = this.getDifference();
+        let resetObjects = [...this._objects];
+        let bestStructure:Entity[] = [...this.objects];
         for (let i = 0; i < this._objects.length; i++) {
-            this.swap(this._objects, i, this._objects.length - 1 - i);
+            this.swap(this.objects, i, this.objects.length - 1 - i);
             await this.refreshScene();
+            this.moveCenterMass();
             if (difference > this.getDifference()) {
                 bestStructure = [...this.objects];
+                resetObjects = [...bestStructure];
                 difference = this.getDifference();
+                console.log(difference);
+            } else {
+                bestStructure = [...resetObjects];
             }
-            this._objects = [...resetObjects];
         }
         this._objects = [...bestStructure];
         await this.refreshScene();
         this.reset();
-        console.log(this.getDifference(), 'Pyramid');
+        console.log(difference, 'Pyramid');
     }
 
     public async refreshScene(isSkipAwait?:boolean, isSkipLine?: boolean) {
         if (!isSkipLine) {
             this.centerMass.visible = true;
             this.center.visible = true;
-            if (this.dimensions === 1) {
-                this.formLine();
-            }
+            this.formLine();
         }
         this.moveCenterMass();
         this.scene.render();

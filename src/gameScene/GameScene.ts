@@ -18,8 +18,8 @@ export default class GameScene extends THREE.Scene {
     private _camera:THREE.Camera;
     private readonly _container:HTMLElement;
     private _renderer:THREE.WebGLRenderer;
-    private recheckIntersection = true;
     private _task:Tasks;
+    private debugController: DebugController;
 
     constructor() {
         super();
@@ -30,9 +30,9 @@ export default class GameScene extends THREE.Scene {
         this._camera = new THREE.OrthographicCamera(Constants.WIDTH / -2 - zoomFactor, Constants.WIDTH / 2 + zoomFactor, Constants.HEIGHT / 2 + zoomFactor, Constants.HEIGHT / -2 - zoomFactor, 1, 1000);
         this.fog = new THREE.Fog(0x23272a, 0.5, 1700);
 
-        this._task = new Task2d(2, this);
+        this._task = new Task(2, this);
 
-        new DebugController(this._task);
+        this.debugController = new DebugController(this._task);
         this.setCameraProperties();
         this.setRendererProperties();
         this.addLights();
@@ -43,7 +43,8 @@ export default class GameScene extends THREE.Scene {
     }
 
     private addHandlers() {
-        EventEmitter.addListener(Events.CHANGE_TO_2D, this.onChangeTo2D);
+        EventEmitter.addListener(Events.CHANGE_TO_2D, this.onChangeTo2D.bind(this));
+        EventEmitter.addListener(Events.CHANGE_TO_1D, this.onChangeTo1D.bind(this));
     }
 
     private addDragControls(objects:Object3D[]) {
@@ -55,7 +56,6 @@ export default class GameScene extends THREE.Scene {
             event.object.onDrag(); // This will prevent moving z axis, but will be on 0 line. change this to your object position of z axis.
         })
         controls.addEventListener("dragend", (event) => {
-            this.recheckIntersection = true;
             event.object.onDragEnd();
         });
     }
@@ -84,9 +84,20 @@ export default class GameScene extends THREE.Scene {
         this._container.appendChild(this._renderer.domElement);
     }
 
-    private onChangeTo2D() {
+    private onChangeTo2D(squareNumber:number) {
         this.remove(...this.children);
+        this._task = new Task2d(2, this, squareNumber);
+        this.debugController = new DebugController(this._task);
+        this.addLights();
+        this.addDragControls(this._task.objects);
+    }
 
+    private onChangeTo1D(linesNumber:number) {
+        this.remove(...this.children);
+        this._task = new Task(1, this, linesNumber);
+        this.debugController = new DebugController(this._task);
+        this.addLights();
+        this.addDragControls(this._task.objects);
     }
 
     public render() {
@@ -96,9 +107,6 @@ export default class GameScene extends THREE.Scene {
     private animate() {
         requestAnimationFrame(this.animate.bind(this, this._task));
         this.render();
-        if (this.recheckIntersection) {
-            this.recheckIntersection = this._task.clearIntersection();
-        }
 
         this._task.moveCenterMass();
     }

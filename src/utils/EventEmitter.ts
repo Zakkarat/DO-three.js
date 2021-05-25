@@ -46,6 +46,7 @@ export class EventEmitter {
 
     static emit(eventName:string, ...args: any) {
         let fns = this.listeners[eventName];
+        console.log(this.listeners);
         if (!fns) return false;
         fns.forEach((f) => {
             f(...args);

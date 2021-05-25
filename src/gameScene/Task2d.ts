@@ -46,12 +46,13 @@ export default class Task2d {
     private async addTaskObjectsToScene(objectNumber?:number) {
         objectNumber = objectNumber || MathUtils.getRandomNumber(2, 6);
 
-        this.addSquares(2);
         this.center = Sphere.build(25, 50, 50, 0xFF0000, 0, 0, -50);
         this.centerMass = Sphere.build(25, 50, 50, 0x008000, 10, 0, -30);
+        this.addSquares(objectNumber);
+
 
         this._resetObjects = [...this._objects];
-        await this.doGreedy();
+        // await this.doGreedy();
         // await this.doImproveGreedy();
         // await this.pyramidAlgorithm();
         this.scene.add(this.center, this.centerMass, ...this.objects);
@@ -138,17 +139,17 @@ export default class Task2d {
     }
 
     public async doImproveGreedy() {
-        this.refreshScene();
+        await this.refreshScene(true);
         let difference = this.getDifference();
-        console.log(difference);
         let bestStructure:Entity[] = [];
-        const resetObjects = [...this._objects];
+        let resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
             for (let j = 0; j < this._objects.length; j++) {
                 this.swap(this._objects, i, j);
                 await this.refreshScene();
                 if (difference > this.getDifference()) {
                     bestStructure = [...this._objects];
+                    resetObjects = [...bestStructure];
                     difference = this.getDifference();
                 } else {
                     this._objects = [...resetObjects];
@@ -159,15 +160,13 @@ export default class Task2d {
         await this.refreshScene();
         this.reset();
         console.log(difference, 'BruteForce');
-        return difference;
     }
 
     public async doGreedy() {
-        this.refreshScene();
-        this.moveCenterMass();
+        await this.refreshScene(true);
         let difference = this.getDifference();
         let bestStructure:Entity[] = [];
-        const resetObjects = [...this._objects];
+        let resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
             for (let j = 0; j < this._objects.length; j++) {
                 this.swap(this._objects, i, j);
@@ -181,13 +180,13 @@ export default class Task2d {
         }
         console.log(difference, 'Greedy');
         this._objects = [...bestStructure];
-        this.refreshScene(true);
+        await this.refreshScene(true);
         this.reset();
-        return difference;
     }
 
+
     public async pyramidAlgorithm() {
-        this.refreshScene();
+        await this.refreshScene();
         this.moveCenterMass();
         this._objects = this._objects.sort((a, b) => a.weight - b.weight);
         await this.refreshScene();
@@ -206,26 +205,29 @@ export default class Task2d {
             return b.weight - a.weight;
         });
         this._objects = left.concat(right);
-        let difference = this.getDifference();
         await this.refreshScene();
-        const resetObjects = [...this._objects];
-        let bestStructure:Entity[] = [];
+        let difference = this.getDifference();
+        let resetObjects = [...this._objects];
+        let bestStructure:Entity[] = [...this.objects];
         for (let i = 0; i < this._objects.length; i++) {
-            this.swap(this._objects, i, this._objects.length - 1 - i);
+            this.swap(this.objects, i, this.objects.length - 1 - i);
             await this.refreshScene();
+            this.moveCenterMass();
             if (difference > this.getDifference()) {
                 bestStructure = [...this.objects];
+                resetObjects = [...bestStructure];
                 difference = this.getDifference();
                 console.log(difference);
+            } else {
+                bestStructure = [...resetObjects];
             }
-            this._objects = [...resetObjects];
         }
         this._objects = [...bestStructure];
         await this.refreshScene();
         this.reset();
-        console.log(this.getDifference(), 'Pyramid');
-        return this.getDifference();
+        console.log(difference, 'Pyramid');
     }
+
 
     public async refreshScene(isSkipAwait?:boolean, isSkipLine?: boolean) {
         if (!isSkipLine) {
