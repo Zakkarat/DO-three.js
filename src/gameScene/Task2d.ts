@@ -160,6 +160,7 @@ export default class Task2d {
         await this.refreshScene();
         this.reset();
         console.log(difference, 'BruteForce');
+        return difference;
     }
 
     public async doGreedy() {
@@ -182,6 +183,7 @@ export default class Task2d {
         this._objects = [...bestStructure];
         await this.refreshScene(true);
         this.reset();
+        return difference;
     }
 
 
@@ -226,6 +228,7 @@ export default class Task2d {
         await this.refreshScene();
         this.reset();
         console.log(difference, 'Pyramid');
+        return difference;
     }
 
 
