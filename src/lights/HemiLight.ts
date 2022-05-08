@@ -1,7 +1,10 @@
 import * as THREE from "three";
+import {container} from "tsyringe";
+import GameScene from "../gameScene/GameScene";
 
 export class HemiLight extends THREE.HemisphereLight {
-    constructor(scene:THREE.Scene) {
+    constructor() {
+        const scene = container.resolve(GameScene);
         super(0xffffff, 0xffffff, 1);
         this.color.setHSL( 0.6, 1, 0.6 );
         this.groundColor.setHSL( 0.095, 1, 0.75 );

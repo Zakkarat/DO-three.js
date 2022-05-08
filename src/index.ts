@@ -1,4 +1,5 @@
+import "reflect-metadata"
 import "./stylesheets/normalize.css"
-import GameScene from "./gameScene/GameScene";
+import Main from "./main/Main";
 
-new GameScene();
+new Main();

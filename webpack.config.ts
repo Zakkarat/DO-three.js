@@ -8,10 +8,13 @@ const isDev = process.env.NODE_ === "development";
 
 const filename = (ext: string): string => (isDev ? `[name].${ext}` : `[name].[hash].${ext}`);
 
-const babelOptions = (preset?: string): { presets: string[], plugins: string[] } => {
+const babelOptions = (preset?: string): { presets: string[], plugins: any[][] } => {
     const opts = {
         presets: ["@babel/preset-env"],
-        plugins: ["@babel/plugin-proposal-class-properties"]
+        plugins: [
+            ["@babel/plugin-proposal-decorators", { "legacy": true }],
+            ["@babel/plugin-proposal-class-properties", { "loose": true }]
+        ]
     };
     if (preset) {
         opts.presets.push(preset);

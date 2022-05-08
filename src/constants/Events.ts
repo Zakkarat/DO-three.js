@@ -5,5 +5,6 @@ export class Events {
     static PLACE_SQUARES:string  = "PLACE_SQUARES";
 
     static ITERATE_STATS:string = "ITERATE_STATS";
+    static RENDER_REFRESH:string = "RENDER_REFRESH";
 }
 

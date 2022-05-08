@@ -30,4 +30,5 @@ export default class Constants {
     static RIGHT =  -window.innerWidth / 2 + 50 + 400
     static TOP = window.innerHeight / 2 - 50 - 100;
     static BOTTOM = -window.innerHeight / 2 + 50 + 100;
+    static ZOOM_FACTOR = 0;
 }

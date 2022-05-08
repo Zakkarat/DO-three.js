@@ -4,6 +4,10 @@ import MathUtils from "../utils/MathUtils";
 import LineFactory from "../factories/LineFactory";
 import Line from "../entities/Line";
 import {InnerChart} from "../utils/InnerChart";
+import {container} from "tsyringe";
+import {Events} from "../constants/Events";
+import {EventEmitter} from "../utils/EventEmitter";
+import Renderer from "../main/Renderer";
 
 type Coordinates =  "x"|"y"|"z";
 
@@ -12,20 +16,23 @@ export default class Task {
     private scene: GameScene;
     private _objects: Entity[] = [];
     private _resetObjects: Entity[] = [];
+    private _resolver: (value:unknown) => void = () => {};
+    private _renderer: Renderer;
     public center: Entity = Line.build(0xFF0000, 5, 0, true);
     public centerMass: Entity = Line.build(0xFF0000, 5, 0, true);
-    private _resolver: (value:unknown) => void = () => {};
     public isSequential: boolean = false;
 
-    constructor(dimensions:number, scene:GameScene, objectNumber?:number) {
+    constructor(dimensions:number, objectNumber?:number) {
         this.dimensions = dimensions;
-        this.scene = scene;
+        this.scene = container.resolve(GameScene);
+        this._renderer = container.resolve(Renderer);
 
         this.addTaskObjectsToScene(objectNumber);
         this.addHandlers();
     }
 
     private addHandlers() {
+        EventEmitter.addListener(Events.RENDER_REFRESH, this.moveCenterMass.bind(this))
         // EventEmitter.addListener(Events.ITERATE_STATS, this.iterateQuantity.bind(this))
     }
 
@@ -309,7 +316,7 @@ export default class Task {
             this.formLine();
         }
         this.moveCenterMass();
-        this.scene.render();
+        // this._renderer.render();
         if (this.isSequential && !isSkipAwait) {
             await this.createAwaiter();
         }
