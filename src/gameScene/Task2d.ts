@@ -4,8 +4,6 @@ import MathUtils from "../utils/MathUtils";
 import Line from "../entities/Line";
 import Sphere from "../entities/Sphere";
 import SquareFactory from "../factories/SquareFactory";
-import {EventEmitter} from "../utils/EventEmitter";
-import {Events} from "../constants/Events";
 import {InnerChart} from "../utils/InnerChart";
 
 type Coordinates =  "x"|"y"|"z";
@@ -29,7 +27,7 @@ export default class Task2d {
     }
 
     private addHandlers() {
-        EventEmitter.addListener(Events.ITERATE_STATS, this.iterate.bind(this))
+        // EventEmitter.addListener(Events.ITERATE_STATS, this.iterate.bind(this))
     }
 
     private addSquares(objectNumber:number) {
@@ -83,7 +81,7 @@ export default class Task2d {
         return isRecheckNeeded;
     }
 
-    private async iterate(iterations:number, squaresNumber:number) {
+    private async iterate(iterations:number, squaresNumber:number,  maxWeight:number) {
         console.log(iterations);
         const results:AlgosResults = {
             greedy: [],
@@ -92,6 +90,7 @@ export default class Task2d {
         };
         for(let i = 0; i < iterations; i++) {
             this.addSquares(squaresNumber);
+            this.randomizeWeights(maxWeight);
             this._resetObjects = [...this._objects];
             this.scene.add(...this.objects);
             const greedy = await this.doGreedy();
@@ -102,6 +101,61 @@ export default class Task2d {
             results.pyramid.push(pyramid);
         }
         new InnerChart(results);
+    }
+
+    private async iterateTime(iterations:number, squaresNumber:number, maxWeight:number) {
+        console.log(iterations);
+        const results:AlgosResults = {
+            greedy: [],
+            bruteForce: [],
+            pyramid: []
+        };
+        for(let i = 0; i < iterations; i++) {
+            this.addSquares(i);
+            this.randomizeWeights(maxWeight);
+            console.log(i);
+            this._resetObjects = [...this._objects];
+            const greedy = await this.checkTime(this.doGreedy.bind(this));
+            const bruteForce = await this.checkTime(this.doImproveGreedy.bind(this));
+            const pyramid = await this.checkTime(this.pyramidAlgorithm.bind(this));
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
+        }
+        new InnerChart(results);
+    }
+
+    private async iterateQuantity(iterations:number, maxWeight:number) {
+        console.log(iterations);
+        const results:AlgosResults = {
+            greedy: [],
+            bruteForce: [],
+            pyramid: []
+        };
+        for(let i = 1; i < iterations; i++) {
+            this.addSquares(i + 1);
+            this.randomizeWeights(maxWeight);
+            console.log(i);
+            this._resetObjects = [...this._objects];
+            const greedy = await this.doGreedy();
+            const bruteForce = await this.doImproveGreedy();
+            const pyramid = await this.pyramidAlgorithm();
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
+        }
+        new InnerChart(results);
+    }
+
+    private async checkTime(cb: () => Promise<number>) {
+        const t1 = performance.now();
+        await cb();
+        const t2 = performance.now();
+        return t2 - t1;
+    }
+
+    private randomizeWeights(maxWeight:number) {
+        this._objects.forEach(elem => elem.weight = MathUtils.getRandomNumber(0, maxWeight));
     }
 
     private getCenterMass() {
@@ -140,7 +194,7 @@ export default class Task2d {
 
     public async doImproveGreedy() {
         await this.refreshScene(true);
-        let difference = this.getDifference();
+        let difference = Infinity;
         let bestStructure:Entity[] = [];
         let resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
@@ -151,6 +205,7 @@ export default class Task2d {
                     bestStructure = [...this._objects];
                     resetObjects = [...bestStructure];
                     difference = this.getDifference();
+                    j = 0;
                 } else {
                     this._objects = [...resetObjects];
                 }
@@ -165,9 +220,9 @@ export default class Task2d {
 
     public async doGreedy() {
         await this.refreshScene(true);
-        let difference = this.getDifference();
+        let difference = Infinity;
         let bestStructure:Entity[] = [];
-        let resetObjects = [...this._objects];
+        const resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
             for (let j = 0; j < this._objects.length; j++) {
                 this.swap(this._objects, i, j);

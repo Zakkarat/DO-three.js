@@ -1,6 +1,4 @@
 import * as THREE from "three";
-// import Sphere from "../entities/Sphere";
-// import SpotLight from "../lights/SpotLight";
 import Constants from "../constants/Constants";
 import {HemiLight} from "../lights/HemiLight";
 import DebugController from "./DebugController";
@@ -30,7 +28,7 @@ export default class GameScene extends THREE.Scene {
         this._camera = new THREE.OrthographicCamera(Constants.WIDTH / -2 - zoomFactor, Constants.WIDTH / 2 + zoomFactor, Constants.HEIGHT / 2 + zoomFactor, Constants.HEIGHT / -2 - zoomFactor, 1, 1000);
         this.fog = new THREE.Fog(0x23272a, 0.5, 1700);
 
-        this._task = new Task(2, this);
+        this._task = new Task(1, this);
 
         this.debugController = new DebugController(this._task);
         this.setCameraProperties();

@@ -3,6 +3,7 @@ import GameScene from "./GameScene";
 import MathUtils from "../utils/MathUtils";
 import LineFactory from "../factories/LineFactory";
 import Line from "../entities/Line";
+import {InnerChart} from "../utils/InnerChart";
 
 type Coordinates =  "x"|"y"|"z";
 
@@ -21,15 +22,16 @@ export default class Task {
         this.scene = scene;
 
         this.addTaskObjectsToScene(objectNumber);
+        this.addHandlers();
+    }
+
+    private addHandlers() {
+        // EventEmitter.addListener(Events.ITERATE_STATS, this.iterateQuantity.bind(this))
     }
 
     private async addTaskObjectsToScene(objectNumber?:number) {
         objectNumber = objectNumber || MathUtils.getRandomNumber(1, 6);
-
-        for (let i = 0; i < objectNumber; i++) {
-            const line = LineFactory.build();
-            this._objects.push(line);
-        }
+        this.addLines(objectNumber);
 
         this._resetObjects = [...this._objects];
         await this.doGreedy();
@@ -38,6 +40,114 @@ export default class Task {
         this.centerMass = this.createCenterMass();
         this.scene.add(...this._objects, this.center, this.centerMass);
 
+    }
+
+    private addLines(objectNumber:number) {
+        this.scene.remove(...this.objects);
+        this.objects = [];
+        for (let i = 0; i < objectNumber; i++) {
+            const line = LineFactory.build();
+            this._objects.push(line);
+        }
+        this.formLine();
+    }
+
+    private async iterate(iterations:number, squaresNumber:number, maxWeight:number) {
+        console.log(iterations);
+        const results:AlgosResults = {
+            greedy: [],
+            bruteForce: [],
+            pyramid: []
+        };
+        for(let i = 0; i < iterations; i++) {
+            this.addLines(squaresNumber);
+            this.randomizeWeights(maxWeight);
+            this._resetObjects = [...this._objects];
+            this.scene.add(...this.objects);
+            const greedy = await this.doGreedy();
+            const bruteForce = await this.doImproveGreedy();
+            const pyramid = await this.pyramidAlgorithm();
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
+        }
+        new InnerChart(results);
+    }
+
+    private async iterateTime(iterations:number, squaresNumber:number, maxWeight:number) {
+        console.log(iterations);
+        const results:AlgosResults = {
+            greedy: [],
+            bruteForce: [],
+            pyramid: []
+        };
+        for(let i = 0; i < iterations; i++) {
+            this.addLines(i + 2);
+            this.randomizeWeights(maxWeight);
+            console.log(i);
+            this._resetObjects = [...this._objects];
+            const greedy = await this.checkTime(this.doGreedy.bind(this));
+            const bruteForce = await this.checkTime(this.doImproveGreedy.bind(this));
+            const pyramid = await this.checkTime(this.pyramidAlgorithm.bind(this));
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
+        }
+        new InnerChart(results);
+    }
+
+    private async iterateQuantity(iterations:number, maxWeight:number) {
+        console.log(iterations);
+        const results:AlgosResults = {
+            greedy: [],
+            bruteForce: [],
+            pyramid: []
+        };
+        for(let i = 1; i < 10; i++) {
+            this.addLines(i + 1);
+            this.randomizeWeights(maxWeight);
+            console.log(i);
+            this._resetObjects = [...this._objects];
+            const greedy = await this.doGreedy();
+            const bruteForce = await this.doImproveGreedy();
+            const pyramid = await this.pyramidAlgorithm();
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
+        }
+        this.addLines(25);
+        this.randomizeWeights(maxWeight);
+        this._resetObjects = [...this._objects];
+        const greedy = await this.doGreedy();
+        const bruteForce = await this.doImproveGreedy();
+        const pyramid = await this.pyramidAlgorithm();
+        results.greedy.push(greedy);
+        results.bruteForce.push(bruteForce);
+        results.pyramid.push(pyramid);
+        for(let i = 50; i <= iterations; i = i + 25) {
+            this.addLines(i);
+            console.log(i, "ITERAZIONEN")
+            this.randomizeWeights(maxWeight);
+            this._resetObjects = [...this._objects];
+            const greedy = await this.doGreedy();
+            const bruteForce = await this.doImproveGreedy();
+            const pyramid = await this.pyramidAlgorithm();
+            results.greedy.push(greedy);
+            results.bruteForce.push(bruteForce);
+            results.pyramid.push(pyramid);
+        }
+        new InnerChart(results);
+    }
+
+    private async checkTime(cb: () => Promise<number>) {
+        const t1 = performance.now();
+        await cb();
+        const t2 = performance.now();
+        return t2 - t1;
+    }
+
+    private randomizeWeights(maxWeight:number) {
+        this._objects.forEach(elem => elem.weight = MathUtils.getRandomNumber(0, maxWeight));
     }
 
     public clearIntersection():boolean {
@@ -101,7 +211,7 @@ export default class Task {
 
     public async doImproveGreedy() {
         await this.refreshScene(true);
-        let difference = this.getDifference();
+        let difference = Infinity;
         let bestStructure:Entity[] = [];
         let resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
@@ -112,6 +222,7 @@ export default class Task {
                     bestStructure = [...this._objects];
                     resetObjects = [...bestStructure];
                     difference = this.getDifference();
+                    j=0;
                 } else {
                     this._objects = [...resetObjects];
                 }
@@ -121,11 +232,12 @@ export default class Task {
         await this.refreshScene();
         this.reset();
         console.log(difference, 'BruteForce');
+        return difference;
     }
 
     public async doGreedy() {
         await this.refreshScene(true);
-        let difference = this.getDifference();
+        let difference = Infinity;
         let bestStructure:Entity[] = [];
         let resetObjects = [...this._objects];
         for (let i = 0; i < this._objects.length; i++) {
@@ -143,6 +255,7 @@ export default class Task {
         this._objects = [...bestStructure];
         await this.refreshScene(true);
         this.reset();
+        return difference;
     }
 
     public async pyramidAlgorithm() {
@@ -186,6 +299,7 @@ export default class Task {
         await this.refreshScene();
         this.reset();
         console.log(difference, 'Pyramid');
+        return difference;
     }
 
     public async refreshScene(isSkipAwait?:boolean, isSkipLine?: boolean) {
