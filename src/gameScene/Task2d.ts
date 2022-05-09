@@ -9,7 +9,6 @@ import {InnerChart} from "../utils/InnerChart";
 type Coordinates =  "x"|"y"|"z";
 
 export default class Task2d {
-    private dimensions: number;
     private scene: GameScene;
     private _objects: Entity[] = [];
     private _resetObjects: Entity[] = [];
@@ -19,7 +18,6 @@ export default class Task2d {
     public isSequential: boolean = false;
 
     constructor(dimensions:number, scene:GameScene, objectNumber?:number) {
-        this.dimensions = dimensions;
         this.scene = scene;
 
         this.addTaskObjectsToScene(objectNumber);
@@ -294,7 +292,6 @@ export default class Task2d {
             this.formSquare(Math.sqrt(this.objects.length));
         }
         this.moveCenterMass();
-        this.scene.render();
         if (this.isSequential && !isSkipAwait) {
             await this.createAwaiter();
         }
@@ -329,23 +326,15 @@ export default class Task2d {
     private getDifference = () => {
         let reducer = 0;
         reducer += Math.pow(this.center.position.x - this.centerMass.position.x, 2);
-        if (this.dimensions > 1) {
-            reducer += Math.pow(this.center.position.y - this.centerMass.position.y, 2);
-        }
-        if (this.dimensions > 2) {
-            reducer += Math.pow(this.center.position.z - this.centerMass.position.z, 2);
-        }
+        reducer += Math.pow(this.center.position.y - this.centerMass.position.y, 2);
+        reducer += Math.pow(this.center.position.z - this.centerMass.position.z, 2);
         return Math.sqrt(reducer);
     }
 
     public moveCenterMass() {
         this.centerMass.position.x = this.getCenterMass()[0];
-        if (this.dimensions > 1) {
-            this.centerMass.position.y = this.getCenterMass()[1];
-        }
-        if (this.dimensions > 2) {
-            this.centerMass.position.z = this.getCenterMass()[2];
-        }
+        this.centerMass.position.y = this.getCenterMass()[1];
+        this.centerMass.position.z = this.getCenterMass()[2];
     }
 
     get objects():Entity[] {

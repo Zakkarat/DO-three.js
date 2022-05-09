@@ -4,13 +4,15 @@ import MathUtils from "../utils/MathUtils";
 import LineFactory from "../factories/LineFactory";
 import Line from "../entities/Line";
 import {InnerChart} from "../utils/InnerChart";
-import {container} from "tsyringe";
+import {container, singleton} from "tsyringe";
 import {Events} from "../constants/Events";
 import {EventEmitter} from "../utils/EventEmitter";
 import Renderer from "../main/Renderer";
+import {DragController} from "../main/DragController";
 
 type Coordinates =  "x"|"y"|"z";
 
+@singleton()
 export default class Task {
     private dimensions: number;
     private scene: GameScene;
@@ -18,16 +20,20 @@ export default class Task {
     private _resetObjects: Entity[] = [];
     private _resolver: (value:unknown) => void = () => {};
     private _renderer: Renderer;
+    private _dragController: DragController;
     public center: Entity = Line.build(0xFF0000, 5, 0, true);
     public centerMass: Entity = Line.build(0xFF0000, 5, 0, true);
     public isSequential: boolean = false;
 
-    constructor(dimensions:number, objectNumber?:number) {
-        this.dimensions = dimensions;
+    constructor() {
+        this.dimensions = 1;
         this.scene = container.resolve(GameScene);
         this._renderer = container.resolve(Renderer);
+        this._dragController = container.resolve(DragController);
+        this.centerMass = this.createCenterMass();
 
-        this.addTaskObjectsToScene(objectNumber);
+        this.scene.add(this.center, this.centerMass);
+        this.addObjectsToScene();
         this.addHandlers();
     }
 
@@ -36,7 +42,7 @@ export default class Task {
         // EventEmitter.addListener(Events.ITERATE_STATS, this.iterateQuantity.bind(this))
     }
 
-    private async addTaskObjectsToScene(objectNumber?:number) {
+    public async addObjectsToScene(objectNumber?:number) {
         objectNumber = objectNumber || MathUtils.getRandomNumber(1, 6);
         this.addLines(objectNumber);
 
@@ -44,9 +50,13 @@ export default class Task {
         await this.doGreedy();
         await this.doImproveGreedy();
         await this.pyramidAlgorithm();
-        this.centerMass = this.createCenterMass();
-        this.scene.add(...this._objects, this.center, this.centerMass);
+        this.scene.add(...this._objects);
+        this._dragController.addDragControls(this.objects);
+    }
 
+    public removeObjectsFromScene() {
+        this.scene.remove(...this.objects);
+        this._dragController.removeDragControls();
     }
 
     private addLines(objectNumber:number) {
@@ -316,7 +326,6 @@ export default class Task {
             this.formLine();
         }
         this.moveCenterMass();
-        // this._renderer.render();
         if (this.isSequential && !isSkipAwait) {
             await this.createAwaiter();
         }
@@ -351,12 +360,7 @@ export default class Task {
     private getDifference = () => {
         let reducer = 0;
         reducer += Math.pow(this.center.position.x - this.centerMass.position.x, 2);
-        if (this.dimensions > 1) {
-            reducer += Math.pow(this.center.position.y - this.centerMass.position.y, 2);
-        }
-        if (this.dimensions > 2) {
-            reducer += Math.pow(this.center.position.z - this.centerMass.position.z, 2);
-        }
+        reducer += Math.pow(this.center.position.y - this.centerMass.position.y, 2);
         return Math.sqrt(reducer);
     }
 
