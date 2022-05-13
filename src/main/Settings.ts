@@ -1,8 +1,8 @@
 import {singleton} from "tsyringe";
-import Task2d from "../gameScene/Task2d";
-import Task from "../gameScene/Task";
+import SquaresSolution from "../gameScene/Task2d";
+import LinesSolution from "../gameScene/Task";
 
 @singleton()
 export class Settings {
-    public currentTask: Task|Task2d;
+    public currentTask: LinesSolution|SquaresSolution;
 }

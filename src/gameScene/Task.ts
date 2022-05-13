@@ -1,75 +1,49 @@
 import Entity from "../entities/Entity";
 import GameScene from "./GameScene";
 import MathUtils from "../utils/MathUtils";
-import LineFactory from "../factories/LineFactory";
 import Line from "../entities/Line";
 import {InnerChart} from "../utils/InnerChart";
-import {container, singleton} from "tsyringe";
-import {Events} from "../constants/Events";
-import {EventEmitter} from "../utils/EventEmitter";
+import {container} from "tsyringe";
 import Renderer from "../main/Renderer";
 import {DragController} from "../main/DragController";
+import {TimeUtils} from "../utils/TimeUtils";
 
 type Coordinates =  "x"|"y"|"z";
 
-@singleton()
-export default class Task {
-    private dimensions: number;
-    private scene: GameScene;
-    private _objects: Entity[] = [];
-    private _resetObjects: Entity[] = [];
-    private _resolver: (value:unknown) => void = () => {};
-    private _renderer: Renderer;
-    private _dragController: DragController;
+export abstract class Task {
+    protected dimensions: number;
+    protected scene: GameScene;
+    protected _objects: Entity[] = [];
+    protected _resetObjects: Entity[] = [];
+    protected _resolver: (value:unknown) => void = () => {};
+    protected _renderer: Renderer;
+    protected _dragController: DragController;
     public center: Entity = Line.build(0xFF0000, 5, 0, true);
     public centerMass: Entity = Line.build(0xFF0000, 5, 0, true);
     public isSequential: boolean = false;
 
     constructor() {
-        this.dimensions = 1;
         this.scene = container.resolve(GameScene);
         this._renderer = container.resolve(Renderer);
         this._dragController = container.resolve(DragController);
         this.centerMass = this.createCenterMass();
 
         this.scene.add(this.center, this.centerMass);
-        this.addObjectsToScene();
         this.addHandlers();
+        this.addObjectsToScene();
     }
 
-    private addHandlers() {
-        EventEmitter.addListener(Events.RENDER_REFRESH, this.moveCenterMass.bind(this))
-        // EventEmitter.addListener(Events.ITERATE_STATS, this.iterateQuantity.bind(this))
-    }
+    protected addHandlers() {}
 
-    public async addObjectsToScene(objectNumber?:number) {
-        objectNumber = objectNumber || MathUtils.getRandomNumber(1, 6);
-        this.addLines(objectNumber);
+    public async addObjectsToScene(objectNumber?:number) {}
 
-        this._resetObjects = [...this._objects];
-        await this.doGreedy();
-        await this.doImproveGreedy();
-        await this.pyramidAlgorithm();
-        this.scene.add(...this._objects);
-        this._dragController.addDragControls(this.objects);
-    }
+    public removeObjectsFromScene() {}
 
-    public removeObjectsFromScene() {
-        this.scene.remove(...this.objects);
-        this._dragController.removeDragControls();
-    }
+    protected formFigure(objectNumber?:number) {}
 
-    private addLines(objectNumber:number) {
-        this.scene.remove(...this.objects);
-        this.objects = [];
-        for (let i = 0; i < objectNumber; i++) {
-            const line = LineFactory.build();
-            this._objects.push(line);
-        }
-        this.formLine();
-    }
+    protected async iterateQuantity(iterations:number, maxWeight:number) {}
 
-    private async iterate(iterations:number, squaresNumber:number, maxWeight:number) {
+    protected async iterate(iterations:number, number:number, maxWeight:number) {
         console.log(iterations);
         const results:AlgosResults = {
             greedy: [],
@@ -77,7 +51,7 @@ export default class Task {
             pyramid: []
         };
         for(let i = 0; i < iterations; i++) {
-            this.addLines(squaresNumber);
+            this.createObjects(number);
             this.randomizeWeights(maxWeight);
             this._resetObjects = [...this._objects];
             this.scene.add(...this.objects);
@@ -91,7 +65,7 @@ export default class Task {
         new InnerChart(results);
     }
 
-    private async iterateTime(iterations:number, squaresNumber:number, maxWeight:number) {
+    protected async iterateTime(iterations:number, maxWeight:number) {
         console.log(iterations);
         const results:AlgosResults = {
             greedy: [],
@@ -99,13 +73,13 @@ export default class Task {
             pyramid: []
         };
         for(let i = 0; i < iterations; i++) {
-            this.addLines(i + 2);
+            this.createObjects(i + 2);
             this.randomizeWeights(maxWeight);
             console.log(i);
             this._resetObjects = [...this._objects];
-            const greedy = await this.checkTime(this.doGreedy.bind(this));
-            const bruteForce = await this.checkTime(this.doImproveGreedy.bind(this));
-            const pyramid = await this.checkTime(this.pyramidAlgorithm.bind(this));
+            const greedy = await TimeUtils.checkTime(this.doGreedy.bind(this));
+            const bruteForce = await TimeUtils.checkTime(this.doImproveGreedy.bind(this));
+            const pyramid = await TimeUtils.checkTime(this.pyramidAlgorithm.bind(this));
             results.greedy.push(greedy);
             results.bruteForce.push(bruteForce);
             results.pyramid.push(pyramid);
@@ -113,57 +87,12 @@ export default class Task {
         new InnerChart(results);
     }
 
-    private async iterateQuantity(iterations:number, maxWeight:number) {
-        console.log(iterations);
-        const results:AlgosResults = {
-            greedy: [],
-            bruteForce: [],
-            pyramid: []
-        };
-        for(let i = 1; i < 10; i++) {
-            this.addLines(i + 1);
-            this.randomizeWeights(maxWeight);
-            console.log(i);
-            this._resetObjects = [...this._objects];
-            const greedy = await this.doGreedy();
-            const bruteForce = await this.doImproveGreedy();
-            const pyramid = await this.pyramidAlgorithm();
-            results.greedy.push(greedy);
-            results.bruteForce.push(bruteForce);
-            results.pyramid.push(pyramid);
-        }
-        this.addLines(25);
-        this.randomizeWeights(maxWeight);
-        this._resetObjects = [...this._objects];
-        const greedy = await this.doGreedy();
-        const bruteForce = await this.doImproveGreedy();
-        const pyramid = await this.pyramidAlgorithm();
-        results.greedy.push(greedy);
-        results.bruteForce.push(bruteForce);
-        results.pyramid.push(pyramid);
-        for(let i = 50; i <= iterations; i = i + 25) {
-            this.addLines(i);
-            console.log(i, "ITERAZIONEN")
-            this.randomizeWeights(maxWeight);
-            this._resetObjects = [...this._objects];
-            const greedy = await this.doGreedy();
-            const bruteForce = await this.doImproveGreedy();
-            const pyramid = await this.pyramidAlgorithm();
-            results.greedy.push(greedy);
-            results.bruteForce.push(bruteForce);
-            results.pyramid.push(pyramid);
-        }
-        new InnerChart(results);
+    protected createObjects(objectNumber:number) {
+        this.scene.remove(...this.objects);
+        this.objects = [];
     }
 
-    private async checkTime(cb: () => Promise<number>) {
-        const t1 = performance.now();
-        await cb();
-        const t2 = performance.now();
-        return t2 - t1;
-    }
-
-    private randomizeWeights(maxWeight:number) {
+    protected randomizeWeights(maxWeight:number) {
         this._objects.forEach(elem => elem.weight = MathUtils.getRandomNumber(0, maxWeight));
     }
 
@@ -191,13 +120,13 @@ export default class Task {
         return isRecheckNeeded;
     }
 
-    private createCenterMass():Line {
+    protected createCenterMass():Line {
         const centerMass = this.getCenterMass();
 
         return Line.build(0xFFFF00, 5, centerMass[0], true);
     }
 
-    private getCenterMass() {
+    protected getCenterMass() {
         const overallWeight = this._objects.reduce((acc, curr) => {
             acc += curr.weight;
             return acc;
@@ -206,24 +135,11 @@ export default class Task {
         return coordinates.map(coordinate => this.getCenterMassCoordinate(overallWeight, coordinate));
     }
 
-    private getCenterMassCoordinate(overallWeight:number, coordinate:Coordinates) {
+    protected getCenterMassCoordinate(overallWeight:number, coordinate:Coordinates) {
         return this._objects.reduce((acc, curr) => {
             acc += curr.position[coordinate] * curr.weight;
             return acc;
         }, 0) / overallWeight;
-    }
-
-    private formLine() {
-        const lineWidth = this._objects.reduce((acc, curr) => {
-            acc += curr.getWidth();
-            return acc;
-        }, 0)
-        const start = this.center.position.x - lineWidth / 2;
-        this._objects.reduce((acc,curr) => {
-            curr.position.x = acc + curr.getWidth() / 2;
-            acc += curr.getWidth();
-            return acc;
-        }, start);
     }
 
     public async doImproveGreedy() {
@@ -323,7 +239,7 @@ export default class Task {
         if (!isSkipLine) {
             this.centerMass.visible = true;
             this.center.visible = true;
-            this.formLine();
+            this.formFigure();
         }
         this.moveCenterMass();
         if (this.isSequential && !isSkipAwait) {

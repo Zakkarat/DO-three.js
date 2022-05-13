@@ -1,21 +1,19 @@
 import * as dat from 'dat.gui';
 import {GUI} from "dat.gui";
-import Task from "./Task";
 import MathUtils from "../utils/MathUtils";
 import Line from "../entities/Line";
 import {Events} from "../constants/Events";
 import {EventEmitter} from "../utils/EventEmitter";
-import Task2d from "./Task2d";
-import Task2dNoRender from "./Task2dNoRender";
 import {container, singleton} from "tsyringe";
 import {Settings} from "../main/Settings";
+import {Task} from "./Task";
+import LinesSolution from "./LinesSolution";
 
-type Tasks = Task|Task2dNoRender|Task2d;
 
 @singleton()
 export default class DebugController {
     private gui: GUI;
-    public task: Tasks;
+    public task: Task;
     private iterations:number = 10;
     private entities:number = 10;
     private weight:number = 100;
@@ -26,7 +24,7 @@ export default class DebugController {
     constructor() {
         this.gui = new dat.GUI();
         this.settings = container.resolve(Settings);
-        this.task = container.resolve(Task);
+        this.task = container.resolve(LinesSolution);
         const lines = this.gui.addFolder('Lines');
         const squares = this.gui.addFolder('Squares');
         const iterations = this.gui.addFolder('Iterations');

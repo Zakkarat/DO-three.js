@@ -1,9 +1,12 @@
 import * as THREE from "three";
-import Task from "./Task";
+import {Task} from "./Task";
 import {Events} from "../constants/Events";
 import {EventEmitter} from "../utils/EventEmitter";
 import {container, singleton} from "tsyringe";
 import {Settings} from "../main/Settings";
+import LinesSolution from "./LinesSolution";
+import SquaresSolution from "./SquaresSolution";
+import {HemiLight} from "../lights/HemiLight";
 
 
 @singleton()
@@ -25,12 +28,17 @@ export default class GameScene extends THREE.Scene {
 
     private onChangeTo2D(squareNumber:number) {
         this.remove(...this.children);
-        // this._task = new Task2d(2, this, squareNumber);
+        this._task = container.resolve(SquaresSolution);
+        this._task.removeObjectsFromScene();
+        this._task.addObjectsToScene();
+        container.resolve(HemiLight);
+
     }
 
     private onChangeTo1D() {
-        this._task = container.resolve(Task);
+        this._task = container.resolve(LinesSolution);
         this._task.removeObjectsFromScene();
         this._task.addObjectsToScene();
+        container.resolve(HemiLight);
     }
 }

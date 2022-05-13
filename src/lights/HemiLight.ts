@@ -1,7 +1,8 @@
 import * as THREE from "three";
-import {container} from "tsyringe";
+import {container, singleton} from "tsyringe";
 import GameScene from "../gameScene/GameScene";
 
+@singleton()
 export class HemiLight extends THREE.HemisphereLight {
     constructor() {
         const scene = container.resolve(GameScene);
