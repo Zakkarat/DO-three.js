@@ -26,11 +26,11 @@ export default class GameScene extends THREE.Scene {
         EventEmitter.addListener(Events.CHANGE_TO_1D, this.onChangeTo1D.bind(this));
     }
 
-    private onChangeTo2D(squareNumber:number) {
+    private onChangeTo2D() {
         this.remove(...this.children);
         this._task = container.resolve(SquaresSolution);
         this._task.removeObjectsFromScene();
-        this._task.addObjectsToScene();
+        this._task.addObjectsToScene(5);
         container.resolve(HemiLight);
 
     }

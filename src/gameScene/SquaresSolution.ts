@@ -1,17 +1,19 @@
-import GameScene from "./GameScene";
 import MathUtils from "../utils/MathUtils";
 import Sphere from "../entities/Sphere";
 import SquareFactory from "../factories/SquareFactory";
 import {InnerChart} from "../utils/InnerChart";
-import {autoInjectable, singleton} from "tsyringe";
+import {container, singleton} from "tsyringe";
 import {Task} from "./Task";
+import {Settings} from "../main/Settings";
 
-@autoInjectable()
+@singleton()
 export default class SquaresSolution extends Task {
+    private _settings: Settings;
 
-    constructor(dimensions:number, scene:GameScene, objectNumber?:number) {
+    constructor() {
         super();
-        this.addObjectsToScene(objectNumber);
+        this._settings = container.resolve(Settings);
+        this.addObjectsToScene();
     }
 
     protected addHandlers() {
@@ -35,13 +37,11 @@ export default class SquaresSolution extends Task {
         this.centerMass = Sphere.build(25, 50, 50, 0x008000, 10, 0, -30);
         this.createObjects(objectNumber);
 
-
         this._resetObjects = [...this._objects];
         await this.doGreedy();
         await this.doImproveGreedy();
         await this.pyramidAlgorithm();
         this.scene.add(this.center, this.centerMass, ...this.objects);
-
     }
 
     protected async iterateQuantity(iterations:number, maxWeight:number) {

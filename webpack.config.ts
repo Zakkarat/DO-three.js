@@ -1,12 +1,9 @@
-import _webpack from "webpack";
 const path = require("path");
 const HTMLWebpackPlugin = require("html-webpack-plugin");
 const {CleanWebpackPlugin} = require("clean-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-const isDev = process.env.NODE_ === "development";
 
-const filename = (ext: string): string => (isDev ? `[name].${ext}` : `[name].[hash].${ext}`);
 
 const babelOptions = (preset?: string): { presets: string[], plugins: any[][] } => {
     const opts = {
@@ -22,97 +19,109 @@ const babelOptions = (preset?: string): { presets: string[], plugins: any[][] } 
     return opts;
 };
 
-const cssLoaders = (addition?: string) => {
-    const loaders = [
-        {
-            loader: MiniCssExtractPlugin.loader,
-            options: {
-                hmr: isDev,
-                reloadAll: true,
-            },
-        },
-        "css-loader",
-    ];
-    if (addition) {
-        loaders.push(addition);
-    }
-
-    return loaders;
-};
 
 
-const plugins = () => {
-    const base = [
-        new HTMLWebpackPlugin({template: "./index.html"}),
-        new CleanWebpackPlugin(),
-        new MiniCssExtractPlugin({
-            filename: filename("css")
-        })
-    ];
 
-    return base;
-};
+module.exports = function (env, argv) {
+    var isDev = argv.mode === "development";
+    var filename = (ext: string): string => (isDev ? `[name].${ext}` : `[name].[hash].${ext}`);
 
-module.exports = {
-    context: path.resolve(__dirname, "src"),
-    mode: "development",
-    entry: {
-        main: ["@babel/polyfill", "./index.ts"]
-    },
-    output: {
-        publicPath: './',
-        filename: filename("js"),
-        path: path.resolve(__dirname, "public")
-    },
-    resolve: {
-        extensions: [".ts", ".js", ".png", ".json"],
-        alias: {
-            "@": path.resolve(__dirname, "src")
-        }
-    },
-    plugins: plugins(),
-    devServer: {
-        contentBase: path.join(__dirname, 'public'),
-        writeToDisk: true,
-        port: 4200,
-        hot: isDev
-    },
-    module: {
+    var plugins = () => {
+        return [
+            new HTMLWebpackPlugin({template: "./public/index.html"}),
+            new CleanWebpackPlugin(),
+            new MiniCssExtractPlugin({
+                filename: filename("css")
+            })
+        ];
+    };
 
-        rules: [
+    var cssLoaders = (addition?: string) => {
+        var loaders = [
             {
-                test: /\.css$/,
-                use: cssLoaders(),
-            },
-            {
-                test: /\.(png|jpe?g|gif|jp2|webp)$/,
-                loader: 'file-loader',
+                loader: MiniCssExtractPlugin.loader,
                 options: {
-                    name: '[name].[ext]',
-                    outputPath: 'images/'
+                    hmr: isDev,
+                    reloadAll: true,
                 },
-                include: path.join(__dirname, 'src/assets/textures')
             },
-            {
-                test: /\.(ttf|woff|woff2|eot)$/,
-                use: ["file-loader"],
-            },
-            {
-                test: /\.less$/,
-                use: cssLoaders("less-loader"),
-            },
-            {
-                test: /\.s[ac]ss$/,
-                use: cssLoaders("sass-loader"),
-            },
-            {
-                test: /\.ts$/,
-                exclude: /node_modules/,
-                loader: {
-                    loader: "babel-loader",
-                    options: babelOptions("@babel/preset-typescript")
-                }
+            "css-loader",
+        ];
+        if (addition) {
+            loaders.push(addition);
+        }
+
+        return loaders;
+    };
+
+
+
+    var config = {
+        context: __dirname,
+        mode: "development",
+        entry: {
+            main: ["./src/index.ts"]
+        },
+        output: {
+            filename: filename("js"),
+            path: __dirname + "/dist",
+        },
+        resolve: {
+            extensions: [".ts", ".js", ".png", ".json"],
+            alias: {
+                "@": path.resolve(__dirname, "src")
             }
-        ]
+        },
+        plugins: plugins(),
+        devServer: {
+            contentBase: path.resolve(__dirname, "dist"),
+            writeToDisk: true,
+            port: 4200,
+            hot: isDev
+        },
+        devtool: "source-map",
+        module: {
+            rules: [
+                {
+                    enforce: "pre",
+                    test: /\.js$/,
+                    use: "source-map-loader"
+                },
+                {
+                    test: /\.css$/,
+                    use: cssLoaders(),
+                },
+                {
+                    test: /\.(png|jpe?g|gif|jp2|webp)$/,
+                    loader: 'file-loader',
+                    options: {
+                        name: '[name].[ext]',
+                        outputPath: 'images/'
+                    },
+                    include: path.join(__dirname, 'src/assets/textures')
+                },
+                {
+                    test: /\.(ttf|woff|woff2|eot)$/,
+                    use: ["file-loader"],
+                },
+                {
+                    test: /\.less$/,
+                    use: cssLoaders("less-loader"),
+                },
+                {
+                    test: /\.s[ac]ss$/,
+                    use: cssLoaders("sass-loader"),
+                },
+                {
+                    test: /\.ts$/,
+                    use: [
+                        {loader: "ts-loader", options: {transpileOnly: true}}
+                    ],
+                    // include: (path.resolve(__dirname, 'src') || path.resolve(__dirname, 'lib')),
+                    exclude: /node_modules/
+                },
+            ]
+        }
     }
+    return config;
 };
