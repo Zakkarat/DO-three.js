@@ -27,18 +27,20 @@ export default class GameScene extends THREE.Scene {
     }
 
     private onChangeTo2D() {
-        this.remove(...this.children);
         this._task = container.resolve(SquaresSolution);
-        this._task.removeObjectsFromScene();
-        this._task.addObjectsToScene(5);
-        container.resolve(HemiLight);
+        this.removeObjects();
+        this._task.addObjectsToScene(3);
 
     }
 
     private onChangeTo1D() {
         this._task = container.resolve(LinesSolution);
-        this._task.removeObjectsFromScene();
+        this.removeObjects();
         this._task.addObjectsToScene();
-        container.resolve(HemiLight);
+    }
+
+    public removeObjects() {
+        this.remove(...this.children);
+        this._task.removeDragControls();
     }
 }

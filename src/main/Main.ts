@@ -38,7 +38,6 @@ export default class Main {
     private animate() {
         requestAnimationFrame(this.animate.bind(this, this._task));
         this.render();
-
         EventEmitter.emit(Events.RENDER_REFRESH);
     }
 }

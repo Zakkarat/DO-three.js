@@ -29,11 +29,7 @@ export default class LinesSolution extends Task {
         await this.pyramidAlgorithm();
         this.scene.add(...this._objects);
         this._dragController.addDragControls(this.objects);
-    }
-
-    public removeObjectsFromScene() {
-        this.scene.remove(...this.objects);
-        this._dragController.removeDragControls();
+        super.addObjectsToScene();
     }
 
     protected createObjects(objectNumber:number) {

@@ -7,6 +7,7 @@ import {container} from "tsyringe";
 import Renderer from "../main/Renderer";
 import {DragController} from "../main/DragController";
 import {TimeUtils} from "../utils/TimeUtils";
+import {HemiLight} from "../lights/HemiLight";
 
 type Coordinates =  "x"|"y"|"z";
 
@@ -35,13 +36,17 @@ export abstract class Task {
 
     protected addHandlers() {}
 
-    public async addObjectsToScene(objectNumber?:number) {}
-
-    public removeObjectsFromScene() {}
+    public async addObjectsToScene(objectNumber?:number) {
+        this.scene.add(container.resolve(HemiLight));
+    }
 
     protected formFigure(objectNumber?:number) {}
 
     protected async iterateQuantity(iterations:number, maxWeight:number) {}
+
+    public removeDragControls() {
+        this._dragController.removeDragControls();
+    }
 
     protected async iterate(iterations:number, number:number, maxWeight:number) {
         console.log(iterations);
@@ -239,7 +244,7 @@ export abstract class Task {
         if (!isSkipLine) {
             this.centerMass.visible = true;
             this.center.visible = true;
-            this.formFigure();
+            this.formFigure(this._objects.length);
         }
         this.moveCenterMass();
         if (this.isSequential && !isSkipAwait) {

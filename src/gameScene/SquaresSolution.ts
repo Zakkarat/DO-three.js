@@ -20,17 +20,17 @@ export default class SquaresSolution extends Task {
         // EventEmitter.addListener(Events.ITERATE_STATS, this.iterate.bind(this))
     }
 
-    protected createObjects(objectNumber:number) {
+    protected createObjects(objectNumber:number = 2) {
         super.createObjects(objectNumber);
         const actualNumber = Math.pow(objectNumber, 2);
         for (let i = 0; i < actualNumber; i++) {
             const square = SquareFactory.build();
-            this.objects.push(square);
+            this._objects.push(square);
         }
-        this.formFigure(objectNumber);
+        this.formFigure();
     }
 
-    public async addObjectsToScene(objectNumber?:number) {
+    public async addObjectsToScene(objectNumber:number = 5) {
         objectNumber = objectNumber || MathUtils.getRandomNumber(2, 6);
 
         this.center = Sphere.build(25, 50, 50, 0xFF0000, 0, 0, -50);
@@ -41,7 +41,8 @@ export default class SquaresSolution extends Task {
         await this.doGreedy();
         await this.doImproveGreedy();
         await this.pyramidAlgorithm();
-        this.scene.add(this.center, this.centerMass, ...this.objects);
+        this.scene.add(this.center, this.centerMass, ...this._objects);
+        super.addObjectsToScene();
     }
 
     protected async iterateQuantity(iterations:number, maxWeight:number) {
@@ -66,7 +67,8 @@ export default class SquaresSolution extends Task {
         new InnerChart(results);
     }
 
-    protected formFigure(objectNumber:number) {
+    protected formFigure() {
+        const objectNumber = Number(Math.log2(this.objects.length).toFixed(0));
         let xCurr = -(objectNumber) * 100 + (objectNumber / 2) * 100;
         xCurr += objectNumber % 2 ? 50 : 50;
         let yCurr = -(objectNumber / 2) * 100;

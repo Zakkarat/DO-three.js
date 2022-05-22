@@ -8,6 +8,7 @@ import {container, singleton} from "tsyringe";
 import {Settings} from "../main/Settings";
 import {Task} from "./Task";
 import LinesSolution from "./LinesSolution";
+import SquaresSolution from "./SquaresSolution";
 
 
 @singleton()
