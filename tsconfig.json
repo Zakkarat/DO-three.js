@@ -13,6 +13,7 @@
     "esModuleInterop": true,
     "downlevelIteration": true,
     "importHelpers": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsx": "react"
   }
 }

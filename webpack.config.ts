@@ -67,7 +67,7 @@ module.exports = function (env, argv) {
             path: __dirname + "/dist",
         },
         resolve: {
-            extensions: [".ts", ".js", ".png", ".json"],
+            extensions: [".ts", ".tsx", ".js", ".png", ".json"],
             alias: {
                 "@": path.resolve(__dirname, "src")
             }
@@ -113,7 +113,7 @@ module.exports = function (env, argv) {
                     use: cssLoaders("sass-loader"),
                 },
                 {
-                    test: /\.ts$/,
+                    test: /\.(ts|tsx)$/,
                     use: [
                         {loader: "ts-loader", options: {transpileOnly: true}}
                     ],

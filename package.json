@@ -41,6 +41,8 @@
         "webpack-dev-server": "~3.11.2"
     },
     "dependencies": {
+        "@types/react": "^18.0.9",
+        "@types/react-dom": "^18.0.4",
         "@types/three": "^0.127.1",
         "chart.js": "^3.2.1",
         "dat.gui": "^0.7.7",
