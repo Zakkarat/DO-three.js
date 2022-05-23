@@ -1,17 +1,18 @@
 import MathUtils from "../utils/MathUtils";
 import LineFactory from "../factories/LineFactory";
 import {InnerChart} from "../utils/InnerChart";
-import {singleton} from "tsyringe";
+import {container, singleton} from "tsyringe";
 import {Events} from "../constants/Events";
 import {EventEmitter} from "../utils/EventEmitter";
 import {Task} from "./Task";
+import {Settings} from "../main/Settings";
 
 @singleton()
 export default class LinesSolution extends Task {
 
     constructor() {
         super();
-        this.addObjectsToScene();
+        this.addObjectsToScene(this._settings.initialRowData.length);
     }
 
     protected addHandlers() {
@@ -35,7 +36,8 @@ export default class LinesSolution extends Task {
     protected createObjects(objectNumber:number) {
         super.createObjects(objectNumber);
         for (let i = 0; i < objectNumber; i++) {
-            const line = LineFactory.build();
+            const elementData = this._settings.initialRowData[i];
+            const line = LineFactory.build(elementData?.width, elementData?.weight);
             this._objects.push(line);
         }
         this.formFigure();

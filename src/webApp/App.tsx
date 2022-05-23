@@ -6,14 +6,16 @@ import {Form} from "react-bootstrap";
 import {Button} from "react-bootstrap";
 import {FormContainer} from "./FormContainer";
 import {Table} from "react-bootstrap";
+import Main from "../main/Main";
 
 const App = () => {
-    const [rowData, setRowData] = useState([{x: 0, y: 0, z: 0, weight: 0}]);
-
+    const [chosenDimensions, setChosenDimension] = useState(1);
+    const [rowData, setRowData] = useState([{width: 0, height: 0, depth: 0, weight: 0}]);
     const addRow = () => {
-        const newRow = {x: 0, y: 0, z: 0, weight: 0};
+        const newRow = {width: 0, height: 0, depth: 0, weight: 0};
         setRowData([...rowData, newRow]);
     }
+
     const removeRow = (index:number) => {
         const rows = [...rowData];
         rows.splice(index, 1);
@@ -22,9 +24,23 @@ const App = () => {
 
     const editRow = (index: number, type: string, event:SyntheticEvent ) => {
         const rows = [...rowData];
-        console.log(event);
         rows[index][type] = (event.target as HTMLInputElement).value;
         setRowData(rows);
+    }
+
+    const onDimensionChange = (index:number) => {
+        setChosenDimension(index + 1);
+    }
+
+    const onFormSubmit = () => {
+        const formattedData = rowData.map(element => {
+           Object.keys(element).map(key => {
+              element[key] = Number(element[key]);
+           });
+           return element;
+        });
+        root.unmount();
+        new Main(chosenDimensions, formattedData);
     }
 
     return (
@@ -36,13 +52,15 @@ const App = () => {
                     <div className="text-center">
                         {['1 dimension', '2 dimensions'].map((label: string, index: number) => (
                             <Form.Check
+                                checked={Number(label[0]) === chosenDimensions}
                                 style={{fontSize: '1.25rem'}}
                                 inline
                                 key={`dimension-${index + 1}`}
                                 type={"radio"}
                                 name="dimensions"
-                                id={`default-${index}`}
+                                id={`dimension-${index}`}
                                 label={`${label}`}
+                                onClick={onDimensionChange.bind(this, index)}
                             />
                         ))}
                     </div>
@@ -68,8 +86,14 @@ const App = () => {
                             return (
                                 <tr>
                                     <td>{index + 1}</td>
-                                    {['x', 'y', 'z', 'weight'].map((type:string) => (
-                                        <td><Form.Control id={`${type}-${index}`} value={rowData[index][type]} onChange={editRow.bind(this, index, type)}/></td>
+                                    {['width', 'height', 'depth', 'weight'].map((type:string, typeIndex) => (
+                                        <td><Form.Control
+                                            id={`${type}-${index}`}
+                                            value={rowData[index][type]}
+                                            type="number"
+                                            disabled={Number(chosenDimensions) <= typeIndex && typeIndex !== 3}
+                                            onChange={editRow.bind(this, index, type)}
+                                        /></td>
                                     ))}
                                     <td>
                                         <Button className="align-center" variant="danger" onClick={removeRow.bind(this, index)}>
@@ -83,7 +107,7 @@ const App = () => {
                     </Table>
                 </Form.Group>
                 </div>
-                <Button className="align-center" variant="primary" type="submit">
+                <Button className="align-center" variant="primary" type="submit" onClick={onFormSubmit.bind(this)}>
                     Submit
                 </Button>
             </FormContainer>

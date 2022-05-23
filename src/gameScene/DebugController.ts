@@ -25,7 +25,8 @@ export default class DebugController {
     constructor() {
         this.gui = new dat.GUI();
         this.settings = container.resolve(Settings);
-        this.task = container.resolve(LinesSolution);
+        // @ts-ignore
+        this.task = container.resolve(this.settings.solutionChosen);
         const lines = this.gui.addFolder('Lines');
         const squares = this.gui.addFolder('Squares');
         const iterations = this.gui.addFolder('Iterations');

@@ -8,6 +8,7 @@ import Renderer from "../main/Renderer";
 import {DragController} from "../main/DragController";
 import {TimeUtils} from "../utils/TimeUtils";
 import {HemiLight} from "../lights/HemiLight";
+import {Settings} from "../main/Settings";
 
 type Coordinates =  "x"|"y"|"z";
 
@@ -19,6 +20,7 @@ export abstract class Task {
     protected _resolver: (value:unknown) => void = () => {};
     protected _renderer: Renderer;
     protected _dragController: DragController;
+    protected _settings: Settings;
     public center: Entity = Line.build(0xFF0000, 5, 0, true);
     public centerMass: Entity = Line.build(0xFF0000, 5, 0, true);
     public isSequential: boolean = false;
@@ -26,12 +28,12 @@ export abstract class Task {
     constructor() {
         this.scene = container.resolve(GameScene);
         this._renderer = container.resolve(Renderer);
+        this._settings = container.resolve(Settings);
         this._dragController = container.resolve(DragController);
         this.centerMass = this.createCenterMass();
 
         this.scene.add(this.center, this.centerMass);
         this.addHandlers();
-        this.addObjectsToScene();
     }
 
     protected addHandlers() {}
