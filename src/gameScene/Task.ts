@@ -40,6 +40,7 @@ export abstract class Task {
 
     public async addObjectsToScene(objectNumber?:number) {
         this.scene.add(container.resolve(HemiLight));
+        this._settings.initialRowData = [];
     }
 
     protected formFigure(objectNumber?:number) {}
