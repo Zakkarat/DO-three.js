@@ -43,6 +43,16 @@ const App = () => {
         new Main(chosenDimensions, formattedData);
     }
 
+    const isInputDisabled = (typeIndex: number):boolean => {
+        const dimensions = Number(chosenDimensions);
+        switch (dimensions){
+            case 1:
+                return dimensions <= typeIndex && typeIndex !== 3;
+            case 2:
+                return typeIndex !== 3;
+        }
+    }
+
     return (
         <>
             <NavBar/>
@@ -91,7 +101,7 @@ const App = () => {
                                             id={`${type}-${index}`}
                                             value={rowData[index][type]}
                                             type="number"
-                                            disabled={Number(chosenDimensions) <= typeIndex && typeIndex !== 3}
+                                            disabled={(isInputDisabled(typeIndex))}
                                             onChange={editRow.bind(this, index, type)}
                                         /></td>
                                     ))}

@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import {Text} from "troika-three-text";
-import EntityNR from "./EntityNR";
 import Entity from "./Entity";
 import {MeshLambertMaterial} from "three";
 
@@ -9,8 +8,12 @@ export default class Cube extends Entity {
         const geometry = new THREE.BoxGeometry( 100, 100, 10 );
         let meshLambertMaterial = new MeshLambertMaterial({color});
         let result = new Cube(geometry, meshLambertMaterial);
-        if (weight) {
+        if (weight && weight !== -1) {
             result._weight = weight;
+        }
+        if (weight === -1) {
+            result._weight = 0;
+            result.visible = false;
         }
         result.addWeightLabel();
         result.receiveShadow = true;

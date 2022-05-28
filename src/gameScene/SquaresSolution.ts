@@ -2,18 +2,15 @@ import MathUtils from "../utils/MathUtils";
 import Sphere from "../entities/Sphere";
 import SquareFactory from "../factories/SquareFactory";
 import {InnerChart} from "../utils/InnerChart";
-import {container, singleton} from "tsyringe";
+import {singleton} from "tsyringe";
 import {Task} from "./Task";
-import {Settings} from "../main/Settings";
 
 @singleton()
 export default class SquaresSolution extends Task {
-    private _settings: Settings;
 
     constructor() {
         super();
-        this._settings = container.resolve(Settings);
-        this.addObjectsToScene();
+        this.addObjectsToScene(this._settings.initialRowData.length);
     }
 
     protected addHandlers() {
@@ -22,12 +19,24 @@ export default class SquaresSolution extends Task {
 
     protected createObjects(objectNumber:number = 2) {
         super.createObjects(objectNumber);
-        const actualNumber = Math.pow(objectNumber, 2);
+
+        const actualNumber = this.getSquareActualNumber(objectNumber);
+        const isFromRowData = this._settings.initialRowData.length;
         for (let i = 0; i < actualNumber; i++) {
-            const square = SquareFactory.build();
+            const elementData = this._settings.initialRowData[i];
+            const weight = isFromRowData ? elementData?.weight || -1 : 0;
+            const square = SquareFactory.build(weight);
             this._objects.push(square);
         }
         this.formFigure();
+    }
+
+    private getSquareActualNumber(objectNumber: number) {
+        let preSquaredObject = objectNumber;
+        if (this._settings.initialRowData.length) {
+            preSquaredObject = Number(Math.log2(objectNumber * 2 - 1).toFixed(0));
+        }
+        return Math.pow(preSquaredObject, 2);
     }
 
     public async addObjectsToScene(objectNumber:number = 5) {
