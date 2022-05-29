@@ -2,25 +2,7 @@ const path = require("path");
 const HTMLWebpackPlugin = require("html-webpack-plugin");
 const {CleanWebpackPlugin} = require("clean-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
-
-
-const babelOptions = (preset?: string): { presets: string[], plugins: any[][] } => {
-    const opts = {
-        presets: ["@babel/preset-env"],
-        plugins: [
-            ["@babel/plugin-proposal-decorators", { "legacy": true }],
-            ["@babel/plugin-proposal-class-properties", { "loose": true }]
-        ]
-    };
-    if (preset) {
-        opts.presets.push(preset);
-    }
-    return opts;
-};
-
-
-
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = function (env, argv) {
     var isDev = argv.mode === "development";
@@ -32,7 +14,12 @@ module.exports = function (env, argv) {
             new CleanWebpackPlugin(),
             new MiniCssExtractPlugin({
                 filename: filename("css")
-            })
+            }),
+            new CopyPlugin({
+                patterns: [
+                    { from: "public/assets", to: "assets" },
+                ],
+            }),
         ];
     };
 
@@ -53,8 +40,6 @@ module.exports = function (env, argv) {
 
         return loaders;
     };
-
-
 
     var config = {
         context: __dirname,

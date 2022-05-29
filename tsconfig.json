@@ -3,7 +3,7 @@
     "incremental": true,
     "tsBuildInfoFile": "./.tsbuildinfo",
     "experimentalDecorators": true,
-    "lib": ["es2019", "dom", "webworker"],
+    "lib": ["es2019", "dom", "webworker", "dom.iterable"],
     "target": "es6",
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
