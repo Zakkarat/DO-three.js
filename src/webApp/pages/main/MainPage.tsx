@@ -2,11 +2,11 @@ import React from "react";
 import 'bootstrap/dist/css/bootstrap.css';
 import {Button, Col, Container, Row } from "react-bootstrap";
 import Image from 'react-bootstrap/Image'
+import {Link} from "react-router-dom";
+import {AuthWrapper} from "../../wrappers/AuthWrapper";
 
 export const MainPage = () => {
-
     return (
-        <>
             <Container className='d-flex flex-column justify-content-center align-content-center mt-5'>
                 <Row className={"d-flex justify-content-center mt-5"}>
                     <Image style={{width: "35%"}} src={'/assets/logo.png'} />
@@ -19,14 +19,13 @@ export const MainPage = () => {
                 </Row>
                 <Row className='mt-4 d-flex justify-content-center'>
                     <Col xs={1} className='text-center'>
-                        <Button size="lg">Login</Button>
+                        <Link to='login'><Button size="lg">Login</Button></Link>
                     </Col>
                     <Col xs={1} className='text-center'>
-                        <Button variant="success" size="lg">Register</Button>
+                        <Link to='register'><Button variant="success" size="lg">Register</Button></Link>
                     </Col>
                 </Row>
             </Container>
-        </>
     );
 }
 

@@ -50,6 +50,7 @@ module.exports = function (env, argv) {
         output: {
             filename: filename("js"),
             path: __dirname + "/dist",
+            publicPath: '/'
         },
         resolve: {
             extensions: [".ts", ".tsx", ".js", ".png", ".json"],
@@ -62,7 +63,8 @@ module.exports = function (env, argv) {
             contentBase: path.resolve(__dirname, "dist"),
             writeToDisk: true,
             port: 4200,
-            hot: isDev
+            hot: isDev,
+            historyApiFallback: true
         },
         devtool: "source-map",
         module: {

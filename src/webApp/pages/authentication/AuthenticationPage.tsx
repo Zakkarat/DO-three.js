@@ -2,8 +2,11 @@ import React, {SyntheticEvent, useState} from "react";
 import {Button, Container, Form} from "react-bootstrap";
 import {IAuthenticationPageProps, IFormAuthMeeting} from "../../types/props";
 import axios from "axios";
+import {AuthWrapper} from "../../wrappers/AuthWrapper";
+import {useNavigate} from "react-router-dom";
 
 export const AuthenticationPage = ({authType}: IAuthenticationPageProps) => {
+    const navigate = useNavigate();
 
     const onSubmit = (e:SyntheticEvent) => {
         e.preventDefault();
@@ -21,11 +24,17 @@ export const AuthenticationPage = ({authType}: IAuthenticationPageProps) => {
                 ...formData
             }, {
                 withCredentials: true
+            }).then((response) => {
+                console.log(response);
+                if(response.status === 200) {
+                   navigate('/personal');
+                }
             });
         }
     }
 
     return (
+        <AuthWrapper>
         <Container className='d-flex flex-column align-items-center mt-5'>
             <h1>{authType}</h1>
             <Form className='w-25' onSubmit={onSubmit.bind(this)}>
@@ -46,6 +55,8 @@ export const AuthenticationPage = ({authType}: IAuthenticationPageProps) => {
                     Submit
                 </Button>
             </Form>
-        </Container>);
+        </Container>
+        </AuthWrapper>
+            );
 }
 

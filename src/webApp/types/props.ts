@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction} from "react";
+import React, {Dispatch, ReactElement, SetStateAction} from "react";
 
 export interface ITableDataProps {
     chosenDimensions: number;
@@ -22,4 +22,9 @@ export interface IFormAuthMeeting {
     login: string;
     password: string;
     repeatPassword?: string;
+}
+
+export interface  IAuthWrapperProps {
+    children: ReactElement;
+    isFromPersonalPage?: boolean;
 }

@@ -48,6 +48,7 @@
         "axios": "^0.27.2",
         "chart.js": "^3.2.1",
         "dat.gui": "^0.7.7",
+        "react-router-dom": "6",
         "reflect-metadata": "^0.1.13",
         "three": "^0.121.1",
         "three-mesh-ui": "^4.6.0",
